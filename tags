@@ -1,0 +1,60 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Matrix	matrix.cpp	/^Matrix::Matrix() $/;"	f	class:Matrix
+Matrix	matrix.cpp	/^Matrix::Matrix(std::vector<std::vector<float>> input)$/;"	f	class:Matrix
+Matrix	matrix.cpp	/^Matrix::Matrix(unsigned int rows, unsigned int cols)$/;"	f	class:Matrix
+Matrix	matrix.cpp	/^Matrix::Matrix(unsigned int size)$/;"	f	class:Matrix
+Matrix	matrix.h	/^class Matrix$/;"	c
+PLU_decompose	functions.cpp	/^std::vector<Matrix> PLU_decompose(Matrix matrix)$/;"	f
+QR_decompose	functions.cpp	/^std::vector<Matrix> QR_decompose(Matrix matrix)$/;"	f
+append	matrix.cpp	/^void Matrix::append(Matrix to_append)$/;"	f	class:Matrix
+best_solve	functions.cpp	/^Matrix best_solve(Matrix LHS, std::vector<float> RHS)$/;"	f
+clear_zero_floats	functions.cpp	/^Matrix clear_zero_floats(Matrix to_clear)$/;"	f
+cols	matrix.cpp	/^int Matrix::cols()$/;"	f	class:Matrix
+data	matrix.h	/^		std::vector<std::vector<float>> data;$/;"	m	class:Matrix
+determinant	functions.cpp	/^float determinant(Matrix matrix)$/;"	f
+eigenvalues	functions.cpp	/^std::vector<float> eigenvalues(Matrix matrix) \/\/ utilises the QR algorithm to compute the eigenvalues$/;"	f
+get_col	matrix.cpp	/^std::vector<float> Matrix::get_col(unsigned int index)$/;"	f	class:Matrix
+get_row	matrix.cpp	/^std::vector<float> Matrix::get_row(unsigned int index)$/;"	f	class:Matrix
+inner_product	functions.cpp	/^float inner_product(std::vector<float> one, std::vector<float> two)$/;"	f
+inverse	functions.cpp	/^Matrix inverse(Matrix matrix)$/;"	f
+is_nullvector	functions.cpp	/^bool is_nullvector(std::vector<float> vect)$/;"	f
+length	functions.cpp	/^float length(std::vector<float> vect)$/;"	f
+main	mainloop.cpp	/^int main()$/;"	f
+main	test.cpp	/^int main()$/;"	f
+multiply	functions.cpp	/^Matrix multiply(Matrix left,Matrix right)$/;"	f
+multiply	functions.cpp	/^std::vector<float> multiply(Matrix left,std::vector<float> right)$/;"	f
+nullspace	functions.cpp	/^Matrix nullspace(Matrix matrix)$/;"	f
+operator *	functions.cpp	/^Matrix operator*(float scalar,Matrix matrix)$/;"	f
+operator *	functions.cpp	/^std::vector<float> operator*(float scalar, std::vector<float> vect)$/;"	f
+operator +	functions.cpp	/^Matrix operator+(Matrix one, Matrix two)$/;"	f
+operator +	functions.cpp	/^std::vector<float> operator+(std::vector<float> one, std::vector<float> two)$/;"	f
+operator -	functions.cpp	/^Matrix operator-(Matrix left, std::vector<float> right)$/;"	f
+operator -	functions.cpp	/^Matrix operator-(Matrix one)$/;"	f
+operator -	functions.cpp	/^Matrix operator-(Matrix one, Matrix two)$/;"	f
+operator -	functions.cpp	/^std::vector<float> operator-(std::vector<float> one)$/;"	f
+operator -	functions.cpp	/^std::vector<float> operator-(std::vector<float> one, std::vector<float> two)$/;"	f
+operator []	matrix.cpp	/^std::vector<float>& Matrix::operator[](unsigned int index)$/;"	f	class:Matrix
+orthonormalise	functions.cpp	/^Matrix orthonormalise(Matrix matrix)$/;"	f
+pivots	functions.cpp	/^std::vector<float> pivots(Matrix matrix)$/;"	f
+print	functions.cpp	/^void print(Matrix to_print)$/;"	f
+print	functions.cpp	/^void print(std::vector<float> to_print)$/;"	f
+projection	functions.cpp	/^Matrix projection(Matrix matrix)$/;"	f
+push_back_col	matrix.cpp	/^void Matrix::push_back_col(std::vector<float> new_col)$/;"	f	class:Matrix
+push_back_row	matrix.cpp	/^void Matrix::push_back_row(std::vector<float> new_row)$/;"	f	class:Matrix
+rank	functions.cpp	/^int rank(Matrix matrix)$/;"	f
+reduced_row_echelon	functions.cpp	/^Matrix reduced_row_echelon(Matrix matrix)$/;"	f
+row_echelon	functions.cpp	/^Matrix row_echelon(Matrix matrix)$/;"	f
+rows	matrix.cpp	/^int Matrix::rows()$/;"	f	class:Matrix
+solve_system	functions.cpp	/^Matrix solve_system(Matrix LHS, std::vector<float> RHS)$/;"	f
+split_left	matrix.cpp	/^Matrix Matrix::split_left(unsigned int index)$/;"	f	class:Matrix
+split_right	matrix.cpp	/^Matrix Matrix::split_right(unsigned int index)$/;"	f	class:Matrix
+swap_rows	matrix.cpp	/^void Matrix::swap_rows(unsigned int first, unsigned int second)$/;"	f	class:Matrix
+test_basics	test.cpp	/^void test_basics()$/;"	f
+test_zero	functions.cpp	/^float test_zero(float number)$/;"	f
+transpose	functions.cpp	/^Matrix transpose(Matrix original)$/;"	f
+zero	functions.cpp	/^bool zero(float number)$/;"	f
