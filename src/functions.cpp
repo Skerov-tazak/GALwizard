@@ -2,27 +2,38 @@
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
+#include <vector>
+#include <iomanip> // for std::fixed and std::setprecision
+using std::min;
+using std::max;
 
 //{ Print functions 
 void print(Matrix to_print)
 {
-	for(int i = 0; i < to_print.rows(); i++){
-		for(int j = 0; j < to_print.cols(); j++){
-			if(zero(to_print[i][j]))
-				std::cout << 0 << " ";
-			else
-				std::cout << to_print[i][j] << " ";
-		}
-		std::cout << "\n";
-	}
-	std::cout<< "\n";
+	std::cout << std::fixed << std::setprecision(6);
+    const int fieldWidth = 13; 
+    
+    for (size_t i = 0; i < to_print.rows(); ++i) {
+        for (size_t j = 0; j < to_print.cols(); ++j) {
+          
+			std::cout << std::setw(fieldWidth) << to_print[i][j];   
+			if (j + 1 < to_print.cols()) std::cout << " ";
+
+        }
+
+        std::cout << '\n';
+    }
+	std::cout << '\n';
 }
 
 void print(std::vector<float> to_print)
 {
-	for(int i = 0; i < to_print.size(); i++)
-		std::cout << to_print[i] << " ";
-	std::cout << "\n";
+	std::cout << std::fixed << std::setprecision(6);
+    
+    const int fieldWidth = 13; 
+    
+    for (const float& val : to_print) 
+        std::cout << std::setw(fieldWidth) << val << '\n';
 }
 //}
 
@@ -98,7 +109,7 @@ Matrix operator+(Matrix one, Matrix two)
 	if(one.rows() != two.rows() || one.cols() != two.cols())
 		throw std::invalid_argument("operator+(): undefined addition of two different size matrices");
 	
-	Matrix answer(one.rows(),one.cols());
+	Matrix answer = Matrix::nullmatrix(one.rows(),one.cols());
 
 	for(int i = 0; i < one.rows(); i++)
 	{
@@ -114,7 +125,7 @@ Matrix operator-(Matrix one, Matrix two)
 	if(one.rows() != two.rows() || one.cols() != two.cols())
 		throw std::invalid_argument("operator+(): undefined addition of two different size matrices");
 	
-	Matrix answer(one.rows(),one.cols());
+	Matrix answer = Matrix::nullmatrix(one.rows(),one.cols());
 
 	for(int i = 0; i < one.rows(); i++)
 	{
@@ -163,6 +174,19 @@ std::vector<float> operator*(float scalar, std::vector<float> vect)
 	return vect;
 }
 
+std::vector<float> operator/(std::vector<float> vect, float scalar) 
+{
+	for(auto x : vect) 
+		x = x / scalar;
+	return vect;
+}
+
+Matrix operator/(Matrix matrix, float scalar)
+{
+	float real = 1 / scalar;
+	return real * matrix;
+}
+
 Matrix operator*(float scalar,Matrix matrix)
 {
 	for(int i = 0; i < matrix.cols();i++)
@@ -178,7 +202,7 @@ Matrix operator*(float scalar,Matrix matrix)
 }
 //}
 
-//{ length
+//{ Length
 
 float length(std::vector<float> vect)
 {
@@ -191,6 +215,15 @@ float length(std::vector<float> vect)
 	return length;
 }
 
+void normalise(std::vector<float> vect) 
+{
+	float len = length(vect);
+
+	for(int i = 0; i < vect.size(); i++) 
+	{
+		vect[i] = vect[i] / len;
+	}		
+}
 
 //}
 
@@ -213,7 +246,7 @@ float inner_product(std::vector<float> one, std::vector<float> two)
 //{ Transpose
 Matrix transpose(Matrix original)
 {
-	Matrix transposed(original.cols(),original.rows());
+	Matrix transposed = Matrix::nullmatrix(original.cols(),original.rows());
 
 	for(int i = 0; i < original.rows(); i++){
 		for(int j = 0; j < original.cols(); j++){
@@ -231,7 +264,7 @@ Matrix multiply(Matrix left,Matrix right)
 	if(left.cols() != right.rows())
 		throw std::invalid_argument("multiply(): this multiplication is not defined");
 
-	Matrix answer(left.rows(),right.cols());
+	Matrix answer = Matrix::nullmatrix(left.rows(),right.cols());
 
 	for(int i = 0; i < answer.rows(); i++){
 		for(int j = 0; j < answer.cols(); j++){
@@ -258,6 +291,21 @@ std::vector<float> multiply(Matrix left,std::vector<float> right)
 
 	return answer;
 }
+
+Matrix multiply(std::vector<float> left, std::vector<float> right) // treats left as vertical, right as horizontal
+{
+	Matrix answer = Matrix::nullmatrix(left.size(), right.size());
+	
+	for(int i = 0; i < answer.rows(); i++){
+		for(int j = 0; j < answer.cols(); j++){
+
+			answer[i][j] = left[i] * right[j];
+		}
+	}
+
+	return answer;
+}
+
 //}
 
 //{ Row Echelon form
@@ -371,7 +419,7 @@ Matrix inverse(Matrix matrix)
 	if(matrix.cols() != matrix.rows()) // check if the matrix is square
 		throw std::invalid_argument("inverse(): the matrix isn't square");
 
-	Matrix identity(matrix.cols());
+	Matrix identity = Matrix::identity(matrix.cols());
 	matrix.append(identity);
 	matrix = reduced_row_echelon(matrix);
 
@@ -540,7 +588,64 @@ Matrix orthonormalise(Matrix matrix)
 //{ Decompositions 
 
 //{ QR decomposition
-std::vector<Matrix> QR_decompose(Matrix matrix)
+
+std::vector<float> householder_transform(std::vector<float> seed, std::vector<float> transformed)
+{
+	return transformed - (2 * (inner_product(seed, transformed)) / inner_product(seed, seed) ) * seed;
+}
+
+Matrix householder_matrix(std::vector<float> seed) 
+{
+	return Matrix::identity(seed.size()) - 2 * (multiply(seed, seed) / inner_product(seed, seed));
+}
+
+std::vector<Matrix> QR_decomposeHS(Matrix matrix) // Performs QR decomposition using Householder transformations
+{
+	if(matrix.rows() != matrix.cols())
+		throw std::invalid_argument("QR_decompose(): only square matrices can be decomposed this way");
+
+	std::vector<Matrix> QR;
+		
+	Matrix Q = Matrix::identity(matrix.rows());
+	Matrix R = matrix;
+
+	for(int i = 0; i < matrix.cols() - 1; i++){
+		
+		Matrix H = Matrix::identity(matrix.rows()); 
+		
+		std::vector<float> difference(matrix.rows() - i,0);
+
+		for(int j = i; j < matrix.rows(); j++){
+			
+			difference[j - i] = R[j][i];
+		}
+
+		float len = length(difference);
+		difference[0] = difference[0] - len;
+		len = length(difference);
+
+
+		for(int p = i; p < matrix.cols(); p++){
+			for(int q = i; q < matrix.rows(); q++){
+				
+				H[q][p] = H[q][p] - ((2 * (difference[p - i]*difference[q - i])) / (len*len));
+								
+			}
+		}
+
+		Q = multiply(Q, H); 
+		R = multiply(H, R);
+			
+		
+	}
+
+	QR.push_back(Q);
+	QR.push_back(R);
+
+	return QR;
+}
+
+std::vector<Matrix> QR_decomposeGS(Matrix matrix) // Permorms QR decomposition using the Gram-Schmidt process 
 {
 	if(matrix.rows() != matrix.cols())
 		throw std::invalid_argument("QR_decompose(): only square matrices can be decomposed this way");
@@ -549,16 +654,13 @@ std::vector<Matrix> QR_decompose(Matrix matrix)
 		
 	
 	Matrix Q;
-	Matrix R(matrix.rows(),matrix.cols());
+	Matrix R = Matrix::nullmatrix(matrix.rows(),matrix.cols());
 
-	int i = 0;
-	while(is_nullvector(matrix.get_col(i)))
-	{
-		i++;
-		if(i == matrix.cols())
-			throw std::invalid_argument("QR_decompose(): this matrix cannot be decomposed");
-	}
-	Q.push_back_col(matrix.get_col(i)); // finds the first non zero column
+	if(is_nullvector(matrix.get_col(0)))
+		throw std::invalid_argument("QR_decompose(): only invertible matrices can be decomposed this way");
+	
+	Q.push_back_col(matrix.get_col(0));
+
 
 	float lngth = length(Q.get_col(0));	
 	R[0][0] = lngth;
@@ -566,25 +668,25 @@ std::vector<Matrix> QR_decompose(Matrix matrix)
 		Q[i][0] = Q[i][0]/lngth;
 
 
-	for(int j = i + 1; j < matrix.cols(); j++)
+	for(int j = 1; j < matrix.cols(); j++)
 	{
 		Matrix column;
 		column.push_back_col(matrix.get_col(j)); 
 		if(is_nullvector(column.get_col(0))) // skips null columns
-			continue;
+			throw std::invalid_argument("QR_decompose(): only invertible matrices can be decomposed this way");
 
 		for(int p = 0; p < Q.cols(); p++) // loops over the previous vectors
 		{
 			Matrix temp; 
 			temp.push_back_col(Q.get_col(p));
 		 	float dot_product = inner_product(temp.get_col(0),column.get_col(0));
-			R[p][j-i] = dot_product;
+			R[p][j] = dot_product;
 			column = column - (dot_product * temp);// subtracts the part in this direction
 		}
 
 		lngth = length(column.get_col(0));
 		
-		R[j - i][j - i] = lngth; // sets the diagonal entries
+		R[j][j] = lngth; // sets the diagonal entries
 
 		for(int i = 0; i < column.rows();i++) // divides by length
 			column[i][0] = column[i][0]/lngth;
@@ -607,7 +709,7 @@ std::vector<Matrix> PLU_decompose(Matrix matrix)
 		throw std::invalid_argument("PLU_decompose(): this operation is defined here only for square matrices");
 	std::vector<Matrix> PLU;
 	
-	Matrix identity(matrix.rows());
+	Matrix identity = Matrix::identity(matrix.rows());
 	Matrix L = identity;
 	int col = 0;
 	int row = 0;
@@ -716,13 +818,54 @@ int rank(Matrix matrix)
 }
 //}
 
-//{ Determinant CORRECT MISTAKE SIGN
+//{ Determinant 
 float determinant(Matrix matrix)
 {
 	if(matrix.rows() != matrix.cols())
 		throw std::invalid_argument("determinant(): this matrix is not square: determinant not defined");
 	
+
 	float determinant = 1;
+
+	/// HERE PERFORM THE SPECIAL ROW SUBTRACTION TO COMPUTE THE DETERMINANT
+	
+	int col = 0;
+	int row = 0;
+
+	// finds the next non-zero pivot
+	while(col < matrix.cols() && row < matrix.rows())
+	{
+		int temp_row = row;
+		while(zero(matrix[temp_row][col]) && temp_row < matrix.rows())
+		{
+			temp_row++;
+
+			if(temp_row == matrix.rows()) // if none is found, skips this column
+			{
+				col++;
+				break;
+			}
+		}
+		
+		matrix.swap_rows(temp_row, row); // if there is one, swaps rows
+		determinant = determinant * (-1);	
+
+		float pivot = matrix[row][col];
+		for(int i = row + 1; i < matrix.rows(); i++) // for all rows
+		{
+			float factor = matrix[i][col]/pivot; // finds a factor
+
+			for(int j = col; j < matrix.cols(); j++) // then for all columns in these rows
+			{
+				matrix[i][j] = test_zero(matrix[i][j] - matrix[row][j] * factor); // subtracts the pivot row times factor
+			}
+		}
+
+	col++;
+	row++;
+	}
+
+	
 	for(int i = 0; i < matrix.cols(); i++)
 	{
 		determinant = determinant * matrix[i][i];
@@ -740,7 +883,7 @@ std::vector<float> pivots(Matrix matrix)
 {
 	std::vector<float> pivots;
 	matrix = row_echelon(matrix);
-	for(int i = 0; i < std::min(matrix.rows(),matrix.cols());i++)
+	for(int i = 0; i < min(matrix.rows(),matrix.cols());i++)
 	{
 		if(!zero(matrix[i][i]))
 			pivots.push_back(matrix[i][i]);
@@ -751,14 +894,33 @@ std::vector<float> pivots(Matrix matrix)
 //}
 
 //{ Eigenvalues UNFINISHED
+
+
+float power_method(Matrix matrix, int iterations) 
+{
+	std::vector<float> current(matrix.cols(),1);
+	current = current / length(current);
+	float current_guess = 0;
+
+	for(int i = 0; i < iterations; i++)
+	{
+		std::vector<float> next = multiply(matrix, current);
+		current_guess = inner_product(next, current);
+		current = next / length(next);
+	}
+
+	return current_guess;
+}
+
+
+
 std::vector<float> eigenvalues(Matrix matrix) // utilises the QR algorithm to compute the eigenvalues
 {
 	Matrix A = matrix;
-	std::vector<Matrix> QR = QR_decompose(A);
-	
 	
 		
-
+		
+	
 
 
 	return {};

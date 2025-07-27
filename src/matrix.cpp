@@ -109,6 +109,16 @@ Matrix Matrix::split_left(unsigned int index)
 
 }
 
+Matrix Matrix::identity(unsigned int size)
+{
+	return Matrix(size);
+}
+
+Matrix Matrix::nullmatrix(unsigned int m, unsigned int n)
+{
+	return Matrix(m,n);
+}
+
 std::vector<float> Matrix::get_row(unsigned int index)
 {
 	if(index >= rows())

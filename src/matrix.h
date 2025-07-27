@@ -7,13 +7,13 @@ class Matrix
 	private:
 		std::vector<std::vector<float>> data;
 		
+		Matrix(unsigned int); // Identity Matrix constructor
+							  
+		Matrix(unsigned int,unsigned int); // Nullmatrix of m by n constructor
+	
 	public:
 		Matrix(); // default constructor
-
-		Matrix(unsigned int); // Identity Matrix constructor
-
-		Matrix(unsigned int,unsigned int); // Nullmatrix of m by n constructor
-		
+	
 		Matrix(std::vector<std::vector<float>>); // constructs a full Matrix (ROW BY ROW)
 		
 		int rows(); // Returns number of rows
@@ -33,6 +33,10 @@ class Matrix
 		Matrix split_right(unsigned int); // returns submatrix to the right of this index (Included)
 
 		Matrix split_left(unsigned int); // returns submatrix to the left of this index (Included);
+
+		static Matrix identity(unsigned int); // returns an n by n identity matrix
+									  
+		static Matrix nullmatrix(unsigned int, unsigned int); // return an n by m nullmatrix 
 
 		std::vector<float> get_row(unsigned int); // returns a row in vector form
 
@@ -57,17 +61,23 @@ Matrix operator*(float,Matrix);
 Matrix operator+(Matrix,Matrix);
 Matrix operator-(Matrix,Matrix);
 Matrix operator-(Matrix);
+Matrix operator/(Matrix,float);
+std::vector<float> operator/(std::vector<float>, float);
 float length(std::vector<float>);
 float inner_product(std::vector<float>,std::vector<float>); // returns the dot product of two vectors
 Matrix transpose(Matrix); // returns the transpose of the matrix
 Matrix multiply(Matrix,Matrix); // multiplies two matrices 
+Matrix multiply(std::vector<float>, std::vector<float>); // multiplies two vectors to get a matrix
 std::vector<float> multiply(Matrix,std::vector<float>); // multiplies a matrix and a vector
 Matrix row_echelon(Matrix); // returns the row echelon form
 Matrix reduced_row_echelon(Matrix); // returns the reduced row echelon form
 Matrix inverse(Matrix); // returns the inverse
 Matrix nullspace(Matrix); // returns the basis vectors for the nullspace
 Matrix projection(Matrix); // returns the projection matrix 
-std::vector<Matrix> QR_decompose(Matrix); // returns the QR decomposition of this matrix
+std::vector<float> householder_transform(std::vector<float>); // transforms a vector
+Matrix householder_matrix(std::vector<float>); // Constructs the Householder Matrix
+std::vector<Matrix> QR_decomposeGS(Matrix); // returns the QR decomposition of this matrix
+std::vector<Matrix> QR_decomposeHS(Matrix); // returns the QR decomposition of this matrix
 std::vector<Matrix> PLU_decompose(Matrix); // returns the LU decomposition of this matrix 
 std::vector<Matrix> SΛS_decompose(Matrix); // returns the SΛS decomposition of this matrix
 Matrix orthonormalise(Matrix); // returns the orthonormal matrix of bases spaning this column space
