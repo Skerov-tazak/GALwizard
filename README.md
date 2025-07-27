@@ -1,7 +1,7 @@
-For now the library includes the basic functionalities (ALL WORK IN PROGRESS):
+For now the library includes these basic functionalities (ALL WORK IN PROGRESS):
 
 
--   Multiplying and other arithmetic operations matrices and vectors
+-   Multiplying and other arithmetic operations on matrices and vectors
 -   Transposing
 -   Solving linear systems
 -   Finding subspaces and nullspaces
