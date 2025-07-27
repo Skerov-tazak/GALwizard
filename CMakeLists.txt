@@ -4,7 +4,7 @@ project(GALwizard
 		DESCRIPTION ""
 		LANGUAGES CXX)
 add_library(libGALwizard SHARED src/functions.cpp src/matrix.cpp)
-target_include_directories(libGALwizard.so PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(libGALwizard PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
 add_executable(GALtest 
