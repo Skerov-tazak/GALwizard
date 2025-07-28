@@ -11,11 +11,14 @@ class Matrix
 							  
 		Matrix(unsigned int,unsigned int); // Nullmatrix of m by n constructor
 	
+		Matrix(); // creates an empty matrix
+				  
 	public:
-		Matrix(); // default constructor
 	
 		Matrix(std::vector<std::vector<float>>); // constructs a full Matrix (ROW BY ROW)
 		
+		bool is_empty(); // returns whether it is an empty matrix
+
 		int rows()const; // Returns number of rows
 		
 		int cols()const; // Returns number of columns
@@ -39,6 +42,8 @@ class Matrix
 		static Matrix identity(unsigned int); // returns an n by n identity matrix
 									  
 		static Matrix nullmatrix(unsigned int, unsigned int); // return an n by m nullmatrix 
+
+		static Matrix empty();	// returns an empty matrix;
 
 		std::vector<float> get_row(unsigned int)const; // returns a row in vector form
 

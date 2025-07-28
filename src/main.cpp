@@ -5,11 +5,9 @@
 int main() {
 	
 	
+	Matrix test({{1,-1},{0,0}});
 
-        Matrix A = Matrix::identity(3);
-        Matrix result = orthonormalise(A).split_left(0); // Returns a vector with one matrix
-														 
-		print(result);
+	print(row_echelon(test));
 
 
 }

@@ -1,5 +1,6 @@
 #include "../include/functions.h"
 #include <cmath>
+#include <iterator>
 #include <numeric>
 #include <stdexcept>
 #include <vector>
@@ -485,11 +486,51 @@ Matrix inverse(Matrix matrix)
 			throw std::invalid_argument("inverse(): this matrix is singular and has no inverse");
 	}
 
-	Matrix answer;
+	Matrix answer = Matrix::empty();
 	for(int i = matrix.cols()/2; i < matrix.cols(); i++) // create the answer;
 		answer.push_back_col(matrix.get_col(i));
 
 	return answer;
+}
+//}
+
+//{ Compare Spans 
+
+bool spaces_equal(Matrix A, Matrix B)
+{
+	A = reduced_row_echelon(A);
+	B = reduced_row_echelon(B);
+
+	if(rank_of_rref(A) != rank_of_rref(B))
+		return false;
+
+	for(int i = 0; i < A.cols(); i++){
+		if(solve_system(B, A.get_col(i)).is_empty()){
+			return false;	
+		}
+	}
+	for(int j = 0; j < B.cols(); j++){
+		if(solve_system(A, B.get_col(j)).is_empty())
+			return false;
+	}
+
+	return true;
+}
+
+bool vectors_colinear(std::vector<float> v, std::vector<float> w){
+	
+	if(v.size() != w.size())
+		return false;
+
+	Matrix together = Matrix::empty();
+
+	together.push_back_col(v);
+	together.push_back_col(w);
+	
+	if(rank(together) > 1)
+		return false;
+
+	return true;
 }
 //}
 
@@ -553,7 +594,7 @@ Matrix nullspace(Matrix matrix)
 			matrix[pivot_indeces[i].first][g] = matrix[pivot_indeces[i].first][g] / pivot;
 	}
 	// After getting to rref, finally the nullspace is generated
-	Matrix answer;
+	Matrix answer = Matrix::empty();
 	std::vector<float> null_vector(matrix.cols(),0);
 	answer.push_back_col(null_vector);
 
@@ -597,7 +638,7 @@ Matrix projection(Matrix matrix)
 Matrix orthonormalise(Matrix matrix)
 {
 	// uses the Gram-Schmidt method for finding an orthonormal basis of this matrix' column space
-	Matrix answer;
+	Matrix answer = Matrix::empty();
 	
 	int i = 0;
 	while(is_nullvector(matrix.get_col(i)))
@@ -615,14 +656,14 @@ Matrix orthonormalise(Matrix matrix)
 
 	for(int j = i + 1; j < matrix.cols(); j++)
 	{
-		Matrix column;
+		Matrix column = Matrix::empty();
 		column.push_back_col(matrix.get_col(j)); 
 		if(is_nullvector(column.get_col(0))) // skips null columns
 			continue;
 
 		for(int p = 0; p < answer.cols(); p++) // loops over the previous vectors
 		{
-			Matrix temp; 
+			Matrix temp = Matrix::empty(); 
 			temp.push_back_col(answer.get_col(p));
 			column = column - multiply(projection(temp), column); // subtracts the part in this direction
 		}
@@ -709,7 +750,7 @@ std::vector<Matrix> QR_decomposeGS(Matrix matrix) // Permorms QR decomposition u
 	std::vector<Matrix> QR;
 		
 	
-	Matrix Q;
+	Matrix Q = Matrix::empty();
 	Matrix R = Matrix::nullmatrix(matrix.rows(),matrix.cols());
 
 	if(is_nullvector(matrix.get_col(0)))
@@ -726,14 +767,14 @@ std::vector<Matrix> QR_decomposeGS(Matrix matrix) // Permorms QR decomposition u
 
 	for(int j = 1; j < matrix.cols(); j++)
 	{
-		Matrix column;
+		Matrix column = Matrix::empty();
 		column.push_back_col(matrix.get_col(j)); 
 		if(is_nullvector(column.get_col(0))) // skips null columns
 			throw std::invalid_argument("QR_decompose(): only invertible matrices can be decomposed this way");
 
 		for(int p = 0; p < Q.cols(); p++) // loops over the previous vectors
 		{
-			Matrix temp; 
+			Matrix temp = Matrix::empty(); 
 			temp.push_back_col(Q.get_col(p));
 		 	float dot_product = inner_product(temp.get_col(0),column.get_col(0));
 			R[p][j] = dot_product;
@@ -824,14 +865,13 @@ Matrix solve_system(Matrix LHS, std::vector<float> RHS)
 	Matrix NullSpace = nullspace(LHS);
 	LHS.push_back_col(-RHS);
 	Matrix nullOfAppended = nullspace(LHS);
-	Matrix particular_solution;
+	Matrix particular_solution = Matrix::empty();
 	int i = 0;
 	while(nullOfAppended[nullOfAppended.rows() - 1][i] != 1)
 	{
-		Matrix empty;
 		i++;
 		if(i == nullOfAppended.cols())
-			throw std::invalid_argument("solve_system(): this system has no solution"); 
+			return Matrix::empty(); 
 	}
 	std::vector<float> solution_base;
 	for(int j = 0; j < nullOfAppended.rows() - 1; j++)
@@ -858,11 +898,10 @@ Matrix best_solve(Matrix LHS, std::vector<float> RHS)
 //}
 
 //{ Rank
-int rank(Matrix matrix)
-{
-	matrix = row_echelon(matrix);
 
-	int max_rank = std::min(matrix.rows(),matrix.cols());
+int rank_of_rref(Matrix matrix)
+{
+	int max_rank = min(matrix.rows(),matrix.cols());
 	for(int i = 0; i < max_rank; i++)
 	{
 		if(matrix[i][i] == 0)
@@ -870,6 +909,12 @@ int rank(Matrix matrix)
 	}
 
 	return max_rank;
+}
+
+int rank(Matrix matrix)
+{
+	matrix = row_echelon(matrix);
+	return rank_of_rref(matrix);
 
 }
 //}
@@ -879,12 +924,12 @@ float determinant(Matrix matrix)
 {
 	if(matrix.rows() != matrix.cols())
 		throw std::invalid_argument("determinant(): this matrix is not square: determinant not defined");
-	
+
 
 	float determinant = 1;
 
 	/// HERE PERFORM THE SPECIAL ROW SUBTRACTION TO COMPUTE THE DETERMINANT
-	
+
 	int col = 0;
 	int row = 0;
 
@@ -902,7 +947,7 @@ float determinant(Matrix matrix)
 				break;
 			}
 		}
-		
+
 		matrix.swap_rows(temp_row, row); // if there is one, swaps rows
 		determinant = determinant * (-1);	
 
@@ -917,11 +962,11 @@ float determinant(Matrix matrix)
 			}
 		}
 
-	col++;
-	row++;
+		col++;
+		row++;
 	}
 
-	
+
 	for(int i = 0; i < matrix.cols(); i++)
 	{
 		determinant = determinant * matrix[i][i];

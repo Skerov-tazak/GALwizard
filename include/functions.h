@@ -36,6 +36,8 @@ std::vector<float> multiply(Matrix,std::vector<float>); // multiplies a matrix a
 Matrix row_echelon(Matrix); // returns the row echelon form
 Matrix reduced_row_echelon(Matrix); // returns the reduced row echelon form
 Matrix inverse(Matrix); // returns the inverse
+bool spaces_equal(Matrix, Matrix); // returns true if two vector sets span the same space
+bool vectors_colinear(std::vector<float>, std::vector<float>); // return true if two vectors are colinear
 Matrix nullspace(Matrix); // returns the basis vectors for the nullspace
 Matrix projection(Matrix); // returns the projection matrix 
 std::vector<float> householder_transform(std::vector<float>); // transforms a vector
@@ -47,6 +49,7 @@ std::vector<Matrix> SΛS_decompose(Matrix); // returns the SΛS decomposition of
 Matrix orthonormalise(Matrix); // returns the orthonormal matrix of bases spaning this column space
 Matrix solve_system(Matrix,std::vector<float>); // returns the solution to the system Ax = b (last column in the solution matrix is the particular solution) 
 Matrix best_solve(Matrix, std::vector<float>); // returns the best projected solution minimising error
+int rank_of_rref(Matrix); // return the rank of rref Matrix
 int rank(Matrix); // returns the rank of the matrix
 float determinant(Matrix);// returns the determinant
 std::vector<float> pivots(Matrix); // returns the list of pivots of this matrix

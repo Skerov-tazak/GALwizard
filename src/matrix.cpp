@@ -4,7 +4,7 @@
 
 Matrix::Matrix() 
 {
-
+	data.resize(0);
 }
 
 Matrix::Matrix(unsigned int rows, unsigned int cols)
@@ -25,6 +25,17 @@ Matrix::Matrix(unsigned int size)
 Matrix::Matrix(std::vector<std::vector<float>> input)
 { 
 	data = input;
+}
+
+bool Matrix::is_empty(){
+	
+	if(data.size() == 0)
+		return true;
+	else 
+		if(data[0].size() == 0)
+			return true;
+
+	return false;
 }
 
 int Matrix::rows()const 
@@ -123,6 +134,11 @@ Matrix Matrix::identity(unsigned int size)
 Matrix Matrix::nullmatrix(unsigned int m, unsigned int n)
 {
 	return Matrix(m,n);
+}
+
+Matrix Matrix::empty()
+{
+	return Matrix();
 }
 
 std::vector<float> Matrix::get_row(unsigned int index)const

@@ -4,6 +4,8 @@
 #include <vector>
 
 
+//{ Arithmetic Tests 
+
 TEST_CASE("Overloading Equals"){
 
 
@@ -150,6 +152,49 @@ TEST_CASE("Basic Arithmetic", "[Matrix]") {
     }
 }
 
+//}
+
+//{ Equality of Spaces Tests 
+
+TEST_CASE("Equality of spaces"){
+	
+
+	SECTION("Colinearity of Vectors"){
+
+		std::vector<float> one = {1,0};
+		std::vector<float> two = {-1,0};
+
+		REQUIRE(vectors_colinear(one,two));
+/*
+		two[1] = 1;
+
+		REQUIRE(!vectors_colinear(one, two));
+
+		one[1] = -1;
+
+		REQUIRE(vectors_colinear(one,two));
+
+	}
+	SECTION("Equality of spans"){
+		
+		Matrix test1({{2,0,0},{2,1,0},{3,0,1}});
+		Matrix test2 = Matrix::identity(3); 
+
+		REQUIRE( test1 != test2 );
+		REQUIRE( spaces_equal(test1, test2));
+
+		test1[2][2] = 0;
+
+		REQUIRE( !spaces_equal(test1, test2));
+*/
+	}
+}
+
+
+
+//}
+
+//{ Gaussian Elimination Tests
 
 TEST_CASE("row_echelon", "[Matrix]") {
 
@@ -235,6 +280,10 @@ TEST_CASE("inverse", "[Matrix]") {
     }
 }
 
+//}
+
+//{ Nullspace Tests
+
 TEST_CASE("Nullspace", "[Matrix][nullspace]") {
 
     SECTION("Full-rank square matrix → only zero vector in nullspace") {
@@ -310,6 +359,10 @@ TEST_CASE("Nullspace", "[Matrix][nullspace]") {
     }
 }
 
+//}
+
+//{ Gram-Schmidt Tests 
+
 TEST_CASE("Orthonormalisation via Gram-Schmidt", "[Matrix][orthonormalise]") {
     SECTION("Standard basis remains unchanged") {
         Matrix A = Matrix::identity(3);
@@ -330,6 +383,12 @@ TEST_CASE("Orthonormalisation via Gram-Schmidt", "[Matrix][orthonormalise]") {
     }
 }
 
+//}
+
+//{ Decomposition Tests
+
+//{ QR
+
 TEST_CASE("QR decomposition via Gram-Schmidt", "[Matrix][QR_decomposeGS]") {
     SECTION("2x2 matrix") {
         Matrix A = Matrix::nullmatrix(2, 2);
@@ -347,7 +406,8 @@ TEST_CASE("QR decomposition via Gram-Schmidt", "[Matrix][QR_decomposeGS]") {
 }
 
 TEST_CASE("QR decomposition via Householder", "[Matrix][QR_decomposeHS]") {
-    SECTION("3x2 matrix") {
+
+	SECTION("3x2 matrix") {
         Matrix A = Matrix::nullmatrix(3, 2);
         A[0][0] = 12; A[1][0] = -51; A[2][0] = 4;
         A[0][1] = 6;  A[1][1] = 167; A[2][1] = -68;
@@ -361,6 +421,10 @@ TEST_CASE("QR decomposition via Householder", "[Matrix][QR_decomposeHS]") {
         REQUIRE(multiply(Q, R) == A);
     }
 }
+
+//}
+
+//{ PLU
 
 TEST_CASE("PLU decomposition", "[Matrix][PLU_decompose]") {
     SECTION("3x3 example matrix") {
@@ -387,3 +451,7 @@ TEST_CASE("PLU decomposition", "[Matrix][PLU_decompose]") {
         REQUIRE(U == I);
     }
 }
+
+//}
+
+//}
