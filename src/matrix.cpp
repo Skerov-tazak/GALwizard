@@ -27,12 +27,12 @@ Matrix::Matrix(std::vector<std::vector<float>> input)
 	data = input;
 }
 
-int Matrix::rows()
+int Matrix::rows()const 
 {
 	return data.size();
 }
 
-int Matrix::cols()
+int Matrix::cols()const
 {
 	if(rows() == 0)
 		return 0;
@@ -81,6 +81,12 @@ std::vector<float>& Matrix::operator[](unsigned int index)
 	return data[index];	
 }
 
+float Matrix::at(unsigned int row, unsigned int col)const{
+
+		
+	return data.at(row).at(col);
+}
+
 Matrix Matrix::split_right(unsigned int index)
 {
 
@@ -119,14 +125,14 @@ Matrix Matrix::nullmatrix(unsigned int m, unsigned int n)
 	return Matrix(m,n);
 }
 
-std::vector<float> Matrix::get_row(unsigned int index)
+std::vector<float> Matrix::get_row(unsigned int index)const
 {
 	if(index >= rows())
 		throw std::invalid_argument("get_row(): invalid row index");
 	return data[index];
 }
 
-std::vector<float> Matrix::get_col(unsigned int index)
+std::vector<float> Matrix::get_col(unsigned int index)const
 {
 	if(index >= cols())
 		throw std::invalid_argument("get_col(): invalid col index");

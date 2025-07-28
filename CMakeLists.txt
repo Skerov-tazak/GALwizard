@@ -3,11 +3,19 @@ project(GALwizard
 		VERSION 0.0.1
 		DESCRIPTION ""
 		LANGUAGES CXX)
-add_library(libGALwizard SHARED src/functions.cpp src/matrix.cpp)
-target_include_directories(libGALwizard PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+add_library(GALwizard SHARED src/functions.cpp src/matrix.cpp)
+target_include_directories(GALwizard PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_executable(GALtest 
-				test/testing.cpp)
-target_include_directories(GALtest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(GALtest libGALwizard)
+include(FetchContent)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.8.1 # or a later release
+)
+FetchContent_MakeAvailable(Catch2)
+
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_PATH}/extras)
+
+add_executable(tests test/test.cpp)
+target_link_libraries(tests PRIVATE GALwizard Catch2::Catch2WithMain)

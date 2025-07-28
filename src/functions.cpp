@@ -1,4 +1,4 @@
-#include "../include/matrix.h"
+#include "../include/functions.h"
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
@@ -199,6 +199,45 @@ Matrix operator*(float scalar,Matrix matrix)
 
 	return matrix;
 
+}
+
+bool operator==(const Matrix& lhs, const Matrix& rhs){
+	
+	if(lhs.rows() != rhs.rows() || rhs.cols() != lhs.cols())
+		return false;
+
+	for(int i = 0; i < lhs.cols(); i++){
+		for(int j = 0; j < lhs.rows(); j++){
+			if(lhs.at(i,j) != rhs.at(i,j))
+				return false;
+		}
+	}
+
+	return true;
+
+}
+
+bool operator!=(const Matrix& lhs, const Matrix& rhs){
+
+	return ~(lhs == rhs);
+}
+
+bool operator==(const std::vector<float>& lhs, const std::vector<float>& rhs){
+
+	if(lhs.size() != rhs.size())
+		return false;
+	
+	for(int i = 0; i < lhs.size(); i++){
+		if(lhs.at(i) != rhs.at(i))
+			return false;		
+	}
+	
+	return true;
+}
+
+bool operator!=(const std::vector<float>& lhs, const std::vector<float>& rhs){
+	
+	return ~(lhs == rhs);
 }
 //}
 
