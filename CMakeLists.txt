@@ -19,3 +19,6 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_PATH}/extras)
 
 add_executable(tests test/test.cpp)
 target_link_libraries(tests PRIVATE GALwizard Catch2::Catch2WithMain)
+
+add_executable(manual_test src/main.cpp)
+target_link_libraries(manual_test PRIVATE GALwizard)

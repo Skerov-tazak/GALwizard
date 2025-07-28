@@ -1,4 +1,5 @@
 #include"matrix.h"
+#include <vector>
 
 //DECLARATION OF FUNCTIONS
 
@@ -14,7 +15,9 @@ std::vector<float> operator-(std::vector<float>,std::vector<float>);
 std::vector<float> operator-(std::vector<float>);
 Matrix operator-(Matrix,std::vector<float>);
 std::vector<float> operator*(float,std::vector<float>);
+std::vector<float> operator*(std::vector<float>, float);
 Matrix operator*(float,Matrix);
+Matrix operator*(Matrix, float);
 Matrix operator+(Matrix,Matrix);
 Matrix operator-(Matrix,Matrix);
 Matrix operator-(Matrix);

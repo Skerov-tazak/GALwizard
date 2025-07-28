@@ -76,6 +76,11 @@ Matrix clear_zero_floats(Matrix to_clear)
 	return to_clear;
 }
 
+bool floats_equal(float left, float right){
+	
+	return !(test_zero(left - right));
+}
+
 //}
 
 //{ Operators
@@ -174,6 +179,11 @@ std::vector<float> operator*(float scalar, std::vector<float> vect)
 	return vect;
 }
 
+std::vector<float> operator*(std::vector<float> vect, float scalar)
+{
+	return scalar*vect;
+}
+
 std::vector<float> operator/(std::vector<float> vect, float scalar) 
 {
 	for(auto x : vect) 
@@ -201,6 +211,10 @@ Matrix operator*(float scalar,Matrix matrix)
 
 }
 
+Matrix operator*(Matrix matrix, float scalar){
+	return scalar * matrix;
+}
+
 bool operator==(const Matrix& lhs, const Matrix& rhs){
 	
 	if(lhs.rows() != rhs.rows() || rhs.cols() != lhs.cols())
@@ -208,7 +222,7 @@ bool operator==(const Matrix& lhs, const Matrix& rhs){
 
 	for(int i = 0; i < lhs.cols(); i++){
 		for(int j = 0; j < lhs.rows(); j++){
-			if(lhs.at(i,j) != rhs.at(i,j))
+			if(!floats_equal(lhs.at(j,i), rhs.at(j,i)))
 				return false;
 		}
 	}
@@ -219,7 +233,7 @@ bool operator==(const Matrix& lhs, const Matrix& rhs){
 
 bool operator!=(const Matrix& lhs, const Matrix& rhs){
 
-	return ~(lhs == rhs);
+	return !(lhs == rhs);
 }
 
 bool operator==(const std::vector<float>& lhs, const std::vector<float>& rhs){
@@ -228,7 +242,7 @@ bool operator==(const std::vector<float>& lhs, const std::vector<float>& rhs){
 		return false;
 	
 	for(int i = 0; i < lhs.size(); i++){
-		if(lhs.at(i) != rhs.at(i))
+		if(!floats_equal(lhs.at(i), rhs.at(i)))
 			return false;		
 	}
 	
@@ -237,8 +251,11 @@ bool operator==(const std::vector<float>& lhs, const std::vector<float>& rhs){
 
 bool operator!=(const std::vector<float>& lhs, const std::vector<float>& rhs){
 	
-	return ~(lhs == rhs);
+	return !(lhs == rhs);
 }
+
+
+
 //}
 
 //{ Length
