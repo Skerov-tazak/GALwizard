@@ -366,6 +366,31 @@ Matrix multiply(std::vector<float> left, std::vector<float> right) // treats lef
 //}
 
 //{ Row Echelon form
+
+void clear_pivot_column(Matrix& matrix, unsigned int row, unsigned int col){
+
+	float pivot = matrix[row][col];
+	for(int i = row + 1; i < matrix.rows(); i++) // for all rows
+	{
+		float factor = matrix[i][col]/pivot; // finds a factor
+
+		for(int j = col; j < matrix.cols(); j++) // then for all columns in these rows
+		{
+			matrix[i][j] = test_zero(matrix[i][j] - matrix[row][j] * factor); // subtracts the pivot row times factor
+		}
+	}
+}
+
+int find_nonzero_pivot(const Matrix& matrix, unsigned int row, unsigned int col){
+
+		int temp_row = row;
+		while(temp_row < matrix.rows() && zero(matrix.at(temp_row, col)))
+			temp_row++;
+
+		return temp_row;
+}
+
+
 Matrix row_echelon(Matrix matrix)
 {
 	int col = 0;
@@ -374,32 +399,19 @@ Matrix row_echelon(Matrix matrix)
 	// finds the next non-zero pivot
 	while(col < matrix.cols() && row < matrix.rows())
 	{
-		int temp_row = row;
-		while(zero(matrix[temp_row][col]) && temp_row < matrix.rows())
-		{
-			temp_row++;
-
-			if(temp_row == matrix.rows()) // if none is found, skips this column
-			{
-				col++;
-				break;
-			}
-		}
-		matrix.swap_rows(temp_row, row); // if there is one, swaps rows
 		
-		float pivot = matrix[row][col];
-		for(int i = row + 1; i < matrix.rows(); i++) // for all rows
-		{
-			float factor = matrix[i][col]/pivot; // finds a factor
+		unsigned int pivot_row = find_nonzero_pivot(matrix, row, col);
 
-			for(int j = col; j < matrix.cols(); j++) // then for all columns in these rows
-			{
-				matrix[i][j] = test_zero(matrix[i][j] - matrix[row][j] * factor); // subtracts the pivot row times factor
-			}
+		if(pivot_row < matrix.rows()){
+			
+			matrix.swap_rows(pivot_row, row); // if there is one, swaps rows
+
+			clear_pivot_column(matrix, row, col);
+
+		row++;
 		}
 
 	col++;
-	row++;
 	}
 
 	return matrix;
@@ -407,45 +419,9 @@ Matrix row_echelon(Matrix matrix)
 //}
 
 //{ Reduced row echelon form
-Matrix reduced_row_echelon(Matrix matrix)
-{	
-	int col = 0;
-	int row = 0;
-	std::vector<std::pair<float,float>> pivot_indeces; // keep track of pivots to clear 
 
-	// finds the next non-zero pivot
-	while(col < matrix.cols() && row < matrix.rows())
-	{
-		int temp_row = row;
-		while(zero(matrix[temp_row][col]) && temp_row < matrix.rows())
-		{
-			temp_row++;
+void clear_over_pivots(Matrix& matrix, std::vector<std::pair<float,float>>& pivot_indeces){
 
-			if(temp_row == matrix.rows()) // if none is found, skips this column
-			{
-				col++;
-				break;
-			}
-		}
-		matrix.swap_rows(temp_row, row); // if there is one, swaps rows
-		float pivot = matrix[row][col];
-		pivot_indeces.push_back({row,col});
-
-		for(int i = row + 1; i < matrix.rows(); i++) // for all rows
-		{
-			float factor = matrix[i][col]/pivot; // finds a factor
-
-			for(int j = col; j < matrix.cols(); j++) // then for all columns in these rows
-			{
-				matrix[i][j] = test_zero(matrix[i][j] - matrix[row][j] * factor); // subtracts the pivot row times factor
-			}
-		}
-
-	col++;
-	row++;
-	}
-
-	// clears the upper rows too
 	for(int i = pivot_indeces.size() - 1; i >= 0; i--) 	// for all pivots
 	{ 
 
@@ -463,7 +439,42 @@ Matrix reduced_row_echelon(Matrix matrix)
 		for(int g = matrix.cols() - 1; g >= pivot_indeces[i].second; g--)
 			matrix[pivot_indeces[i].first][g] = matrix[pivot_indeces[i].first][g] / pivot;
 	}
+}
 
+void ref_remember_pivots(Matrix& matrix, std::vector<std::pair<float,float>>& pivot_indeces){
+
+	int col = 0;
+	int row = 0;
+
+	while(col < matrix.cols() && row < matrix.rows())
+	{
+		unsigned int pivot_row = find_nonzero_pivot(matrix, row, col);
+
+		if(pivot_row != matrix.rows()) // if none is found, skips this column
+		{
+			matrix.swap_rows(pivot_row, row); // if there is one, swaps rows
+			float pivot = matrix[row][col];
+			pivot_indeces.push_back({row,col});
+
+			clear_pivot_column(matrix, row, col);
+
+			row++;
+		}	
+		col++;
+	}
+}
+
+Matrix reduced_row_echelon(Matrix matrix)
+{	
+	std::vector<std::pair<float,float>> pivot_indeces; // keep track of pivots to clear 
+
+	// finds the next non-zero pivot
+
+	ref_remember_pivots(matrix, pivot_indeces);
+
+	// clears the upper rows too
+
+	clear_over_pivots(matrix, pivot_indeces);
 
 	return matrix;
 }
@@ -498,10 +509,19 @@ Matrix inverse(Matrix matrix)
 
 bool spaces_equal(Matrix A, Matrix B)
 {
-	A = reduced_row_echelon(A);
-	B = reduced_row_echelon(B);
+	
+	std::vector<std::pair<float,float>> pivots;
 
-	if(rank_of_rref(A) != rank_of_rref(B))
+	ref_remember_pivots(A, pivots);
+	unsigned int rank_A = pivots.size();
+	clear_over_pivots(A, pivots);
+
+	pivots.resize(0);
+	ref_remember_pivots(B, pivots);
+	unsigned int rank_B = pivots.size();
+	clear_over_pivots(B, pivots);
+
+	if(rank_A != rank_B)
 		return false;
 
 	for(int i = 0; i < A.cols(); i++){
@@ -539,73 +559,31 @@ Matrix nullspace(Matrix matrix)
 {
 	// First get to the reduced row echelon form and remember pivots
 
-	int col = 0;
-	int row = 0;
 	std::vector<std::pair<float,float>> pivot_indeces; // keep track of pivots to clear 
 
-	// finds the next non-zero pivot
-	while(col < matrix.cols() && row < matrix.rows())
-	{
-		int temp_row = row;
-		while(zero(matrix[temp_row][col]) && temp_row < matrix.rows())
-		{
-			temp_row++;
-
-			if(temp_row == matrix.rows()) // if none is found, skips this column
-			{
-				col++;
-				break;
-			}
-		}
-		matrix.swap_rows(temp_row, row); // if there is one, swaps rows
-		float pivot = matrix[row][col];
-		pivot_indeces.push_back({row,col});
-
-		for(int i = row + 1; i < matrix.rows(); i++) // for all rows
-		{
-			float factor = matrix[i][col]/pivot; // finds a factor
-
-			for(int j = col; j < matrix.cols(); j++) // then for all columns in these rows
-			{
-				matrix[i][j] = test_zero(matrix[i][j] - matrix[row][j] * factor); // subtracts the pivot row times factor
-			}
-		}
-
-	col++;
-	row++;
-	}
+	// clears under the pivots
+	
+	ref_remember_pivots(matrix, pivot_indeces);
 
 	// clears the upper rows too
-	for(int i = pivot_indeces.size() - 1; i >= 0; i--) 	// for all pivots
-	{ 
+	
+	clear_over_pivots(matrix, pivot_indeces);
 
-		float pivot = matrix[pivot_indeces[i].first][pivot_indeces[i].second];
-
-		for(int j = pivot_indeces[i].first - 1; j >= 0; j--) // for all rows above this pivot
-		{
-			float factor = matrix[j][pivot_indeces[i].second]/pivot;	
-
-			for(int p = matrix.cols() - 1; p >= pivot_indeces[i].second; p--) // for all columns in that row
-			{
-				matrix[j][p] = test_zero(matrix[j][p] - factor * matrix[pivot_indeces[i].first][p]);
-			}
-		}
-		for(int g = matrix.cols() - 1; g >= pivot_indeces[i].second; g--)
-			matrix[pivot_indeces[i].first][g] = matrix[pivot_indeces[i].first][g] / pivot;
-	}
 	// After getting to rref, finally the nullspace is generated
 	Matrix answer = Matrix::empty();
+
 	std::vector<float> null_vector(matrix.cols(),0);
 	answer.push_back_col(null_vector);
 
-	int which_pivot = 0;
+
+	int next_pivot = 0;
 	for(int i = 0; i < matrix.cols(); i++) // iterate through, skipping pivot columns
 	{
 		std::vector<float> partial_answer(matrix.cols(),0);
-		while(pivot_indeces[which_pivot].second == i)
+		while(next_pivot < pivot_indeces.size() && pivot_indeces[next_pivot].second == i)
 		{
 			i++;
-			which_pivot++;
+			next_pivot++;
 			if(i == matrix.cols()) // in case the last few cols are pivot columns
 				return answer;
 		}
@@ -718,18 +696,25 @@ std::vector<Matrix> QR_decomposeHS(Matrix matrix) // Performs QR decomposition u
 		}
 
 		float len = length(difference);
-		difference[0] = difference[0] - len;
+
+		if(difference[0] > 0)
+			difference[0] = difference[0] + len;
+		else 
+			difference[0] = difference[0] - len;
+
 		len = length(difference);
+		
+		if(len != 0){
 
+			for(int p = i; p < matrix.cols(); p++){
+				for(int q = i; q < matrix.rows(); q++){
 
-		for(int p = i; p < matrix.cols(); p++){
-			for(int q = i; q < matrix.rows(); q++){
-				
-				H[q][p] = H[q][p] - ((2 * (difference[p - i]*difference[q - i])) / (len*len));
-								
+					H[q][p] = H[q][p] - ((2 * (difference[p - i]*difference[q - i])) / (len*len));
+
+				}
 			}
-		}
 
+		}
 		Q = multiply(Q, H); 
 		R = multiply(H, R);
 			
@@ -814,40 +799,44 @@ std::vector<Matrix> PLU_decompose(Matrix matrix)
 	// finds the next non-zero pivot
 	while(col < matrix.cols() && row < matrix.rows())
 	{
-		int temp_row = row;
-		while(zero(matrix[temp_row][col]) && temp_row < matrix.rows())
+		unsigned int pivot_row = find_nonzero_pivot(matrix, row, col);
+
+		if(pivot_row < matrix.rows()) // if none is found, skips this column
 		{
-			temp_row++;
-	
-			if(temp_row == matrix.rows()) // if none is found, skips this column
+
+			matrix.swap_rows(pivot_row, row); // if there is one, swaps rows
+			identity.swap_rows(pivot_row, row);
+			L.swap_rows(pivot_row, row);
+			
+			// Quicker "swap columns" which are standard basis vectors
+
+			L[row][row] = 1;
+			L[pivot_row][row] = 0;
+			L[row][pivot_row] = 0;
+			L[pivot_row][pivot_row] = 1;
+			
+			float pivot = matrix[row][col];
+			for(int i = row + 1; i < matrix.rows(); i++) // for all rows
 			{
-				col++;
-				break;
+				float factor = matrix[i][col]/pivot; // finds a factor
+
+				for(int j = col; j < matrix.cols(); j++) // then for all columns in these rows
+				{
+					matrix[i][j] = test_zero(matrix[i][j] - matrix[row][j] * factor); // subtracts the pivot row times factor
+				}
+				L[i][col] = factor;
 			}
+			row++;
 		}
 
-		matrix.swap_rows(temp_row, row); // if there is one, swaps rows
-		identity.swap_rows(temp_row, row);
-		float pivot = matrix[row][col];
-		for(int i = row + 1; i < matrix.rows(); i++) // for all rows
-		{
-			float factor = matrix[i][col]/pivot; // finds a factor
-			L[i][row] = factor;
-
-			for(int j = col; j < matrix.cols(); j++) // then for all columns in these rows
-			{
-				matrix[i][j] = test_zero(matrix[i][j] - matrix[row][j] * factor); // subtracts the pivot row times factor
-			}
-		}
-
-	col++;
-	row++;
+		col++;
 	}
+
 	Matrix P = transpose(identity); // the inverse of an orthonormal matrix is its transpose
-	Matrix U = matrix.split_left(2); // this is what is left after elimination
+
 	PLU.push_back(P);
 	PLU.push_back(L);
-	PLU.push_back(U);
+	PLU.push_back(matrix);
 	return PLU;
 
 }
@@ -899,22 +888,11 @@ Matrix best_solve(Matrix LHS, std::vector<float> RHS)
 
 //{ Rank
 
-int rank_of_rref(Matrix matrix)
-{
-	int max_rank = min(matrix.rows(),matrix.cols());
-	for(int i = 0; i < max_rank; i++)
-	{
-		if(matrix[i][i] == 0)
-			max_rank--;
-	}
-
-	return max_rank;
-}
-
 int rank(Matrix matrix)
 {
-	matrix = row_echelon(matrix);
-	return rank_of_rref(matrix);
+	std::vector<std::pair<float,float>> pivot_indeces;
+	ref_remember_pivots(matrix, pivot_indeces);
+	return pivot_indeces.size();
 
 }
 //}
@@ -936,34 +914,19 @@ float determinant(Matrix matrix)
 	// finds the next non-zero pivot
 	while(col < matrix.cols() && row < matrix.rows())
 	{
-		int temp_row = row;
-		while(zero(matrix[temp_row][col]) && temp_row < matrix.rows())
+		unsigned int pivot_row = find_nonzero_pivot(matrix, row, col);
+
+		if(pivot_row < matrix.rows()) // if none is found, skips this column
 		{
-			temp_row++;
 
-			if(temp_row == matrix.rows()) // if none is found, skips this column
-			{
-				col++;
-				break;
-			}
+			matrix.swap_rows(pivot_row, row); // if there is one, swaps rows
+			determinant = determinant * (-1);	
+			
+			clear_pivot_column(matrix, row, col);
+
+			row++;
 		}
-
-		matrix.swap_rows(temp_row, row); // if there is one, swaps rows
-		determinant = determinant * (-1);	
-
-		float pivot = matrix[row][col];
-		for(int i = row + 1; i < matrix.rows(); i++) // for all rows
-		{
-			float factor = matrix[i][col]/pivot; // finds a factor
-
-			for(int j = col; j < matrix.cols(); j++) // then for all columns in these rows
-			{
-				matrix[i][j] = test_zero(matrix[i][j] - matrix[row][j] * factor); // subtracts the pivot row times factor
-			}
-		}
-
 		col++;
-		row++;
 	}
 
 

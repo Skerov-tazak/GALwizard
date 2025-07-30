@@ -167,8 +167,6 @@ void Matrix::swap_rows(unsigned int first, unsigned int second)
 	if(first > rows() || second > rows())
 		throw std::invalid_argument("swap_rows(): invalid row indeces");
 
-	std::vector<float> temp = data[first];
-	data[first] = data[second];
-	data[second] = temp;
+	std::swap(data[first],data[second]);
 }
 

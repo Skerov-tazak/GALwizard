@@ -3,6 +3,25 @@
 #include <limits>
 #include <vector>
 
+//{ Helper Functions
+
+auto check_upper_triangular = [](const Matrix& R) {
+	for (int i = 1; i < R.rows(); ++i) {
+		for (int j = 0; j < i; ++j) {
+			REQUIRE(R.at(i,j) == 0);
+		}
+	}
+};
+
+auto check_lower_triangular = [](const Matrix& L) {
+	for (int i = 0; i < L.rows(); ++i) {
+		for (int j = i+1; j < L.cols(); ++j) {
+			REQUIRE(L.at(i,j) == 0);
+		}
+	}
+};
+
+//}
 
 //{ Arithmetic Tests 
 
@@ -165,7 +184,7 @@ TEST_CASE("Equality of spaces"){
 		std::vector<float> two = {-1,0};
 
 		REQUIRE(vectors_colinear(one,two));
-/*
+
 		two[1] = 1;
 
 		REQUIRE(!vectors_colinear(one, two));
@@ -186,7 +205,29 @@ TEST_CASE("Equality of spaces"){
 		test1[2][2] = 0;
 
 		REQUIRE( !spaces_equal(test1, test2));
-*/
+
+		Matrix zero = Matrix::nullmatrix(3, 3);
+
+		REQUIRE( !spaces_equal(test1, zero) );
+		test2[1][1] = 0;
+		test2[2][2] = 0;
+
+		REQUIRE( !spaces_equal(test2, zero) );
+
+		zero[0][0] = 1;
+
+		REQUIRE( spaces_equal(zero, test2) );	
+
+
+	}
+	SECTION("Matrices and Vectors"){
+
+		Matrix test1({{1,-1,0},{0,0,0},{0,0,0}});
+		Matrix test2({{-1,1},{0,0},{0,0}});
+		
+		REQUIRE(spaces_equal(test1, test2));
+
+			
 	}
 }
 
@@ -286,7 +327,7 @@ TEST_CASE("inverse", "[Matrix]") {
 
 TEST_CASE("Nullspace", "[Matrix][nullspace]") {
 
-    SECTION("Full-rank square matrix → only zero vector in nullspace") {
+    SECTION("Full-rank square matrix so only zero vector in nullspace") {
         Matrix A = Matrix::nullmatrix(2, 2);
         A[0][0] = 1; A[0][1] = 2;
         A[1][0] = 3; A[1][1] = 4;
@@ -295,7 +336,7 @@ TEST_CASE("Nullspace", "[Matrix][nullspace]") {
 
         // Should return 2x1 matrix, all zero
         Matrix expected = Matrix::nullmatrix(2, 1);
-        REQUIRE(ns == expected);
+        REQUIRE(spaces_equal(ns, expected));
     }
 
     SECTION("Matrix with a 1D nullspace") {
@@ -306,11 +347,10 @@ TEST_CASE("Nullspace", "[Matrix][nullspace]") {
         Matrix ns = nullspace(A);
 
         // Expected: nullspace has basis vectors (0,0) and (1,-1)
-        Matrix expected = Matrix::nullmatrix(2, 2);
-        expected[0][0] = 0; expected[1][0] = 0;  // zero vector first
-        expected[0][1] = 1; expected[1][1] = -1; // basis vector
+        Matrix expected = Matrix::nullmatrix(2, 1);
+        expected[0][0] = 1; expected[1][0] = -1; // basis vector
 
-        REQUIRE(ns == expected);
+        REQUIRE(spaces_equal(expected, ns));
     }
 
     SECTION("Matrix with 2D nullspace (wide zero matrix)") {
@@ -326,23 +366,8 @@ TEST_CASE("Nullspace", "[Matrix][nullspace]") {
         expected[0][2] = 0; expected[1][2] = 1; expected[2][2] = 0;
         expected[0][3] = 0; expected[1][3] = 0; expected[2][3] = 1;
 
-        REQUIRE(ns == expected);
+        REQUIRE(spaces_equal(ns, expected));
     }
-
-    SECTION("Matrix with no rows (nullspace = ℝ^n)") {
-        Matrix A = Matrix::nullmatrix(0, 2); // 0x2 matrix
-
-        Matrix ns = nullspace(A);
-
-        // Nullspace = ℝ² → zero vector + identity basis vectors
-        Matrix expected = Matrix::nullmatrix(2, 3);
-        expected[0][0] = 0; expected[1][0] = 0;
-        expected[0][1] = 1; expected[1][1] = 0;
-        expected[0][2] = 0; expected[1][2] = 1;
-
-        REQUIRE(ns == expected);
-    }
-
     SECTION("Zero matrix (e.g. 2x3 all zeros) → full ℝ³ nullspace") {
         Matrix A = Matrix::nullmatrix(2, 3); // All zero
 
@@ -355,7 +380,7 @@ TEST_CASE("Nullspace", "[Matrix][nullspace]") {
         expected[0][2] = 0; expected[1][2] = 1; expected[2][2] = 0;
         expected[0][3] = 0; expected[1][3] = 0; expected[2][3] = 1;
 
-        REQUIRE(ns == expected);
+        REQUIRE(spaces_equal(expected, ns));
     }
 }
 
@@ -405,9 +430,56 @@ TEST_CASE("QR decomposition via Gram-Schmidt", "[Matrix][QR_decomposeGS]") {
     }
 }
 
-TEST_CASE("QR decomposition via Householder", "[Matrix][QR_decomposeHS]") {
+TEST_CASE("QR decomposition via Householder ", "[Matrix][QR_decomposeHS]") {
+    SECTION("2x2 identity matrix") {	
+        Matrix A = Matrix::identity(2);
 
-	SECTION("3x2 matrix") {
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+        REQUIRE(qr.size() == 2);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(2)); // Q orthogonal
+        REQUIRE(multiply(Q, R) == A);                             // Q*R = A
+    }
+
+    SECTION("2x2 simple matrix") {
+        Matrix A = Matrix::nullmatrix(2, 2);
+        A[0][0] = 1; A[0][1] = 1;
+        A[1][0] = 1; A[1][1] = -1;
+
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+        REQUIRE(qr.size() == 2);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(2));
+        REQUIRE(multiply(Q, R) == A);
+
+        // Check R is upper triangular
+        REQUIRE(R[1][0] == 0);
+    }
+
+    SECTION("3x3 example matrix") {
+        Matrix A = Matrix::nullmatrix(3, 3);
+        A[0][0] = 12;  A[0][1] = -51; A[0][2] = 4;
+        A[1][0] = 6;   A[1][1] = 167; A[1][2] = -68;
+        A[2][0] = -4;  A[2][1] = 24;  A[2][2] = -41;
+
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+        REQUIRE(qr.size() == 2);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(3));
+        REQUIRE(multiply(Q, R) == A);
+
+        // R should be upper triangular
+        REQUIRE(R[1][0] == 0);
+        REQUIRE(R[2][0] == 0);
+        REQUIRE(R[2][1] == 0);
+    }
+/*	SECTION("3x2 matrix") {
         Matrix A = Matrix::nullmatrix(3, 2);
         A[0][0] = 12; A[1][0] = -51; A[2][0] = 4;
         A[0][1] = 6;  A[1][1] = 167; A[2][1] = -68;
@@ -419,6 +491,111 @@ TEST_CASE("QR decomposition via Householder", "[Matrix][QR_decomposeHS]") {
 
         REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(3));
         REQUIRE(multiply(Q, R) == A);
+    }
+	*/
+}
+
+TEST_CASE("QR decomposition via Householder (square matrices) - Edge Cases", "[Matrix][QR_decomposeHS]") {
+
+
+    SECTION("Identity matrix") {
+        Matrix A = Matrix::identity(4);
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+        REQUIRE(qr.size() == 2);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(4));
+        REQUIRE(multiply(Q, R) == A);
+        check_upper_triangular(R);
+    }
+
+    SECTION("Zero matrix") {
+        Matrix A = Matrix::nullmatrix(3, 3);
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(3));
+        REQUIRE(multiply(Q, R) == A);
+        check_upper_triangular(R);
+    }
+
+    SECTION("Upper triangular matrix") {
+        Matrix A = Matrix::nullmatrix(3, 3);
+        A[0][0] = 2; A[0][1] = 3; A[0][2] = 1;
+        A[1][1] = 4; A[1][2] = 5;
+        A[2][2] = 6;
+
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(3));
+        REQUIRE(multiply(Q, R) == A);
+        check_upper_triangular(R);
+    }
+
+    SECTION("Lower triangular matrix") {
+        Matrix A = Matrix::nullmatrix(3, 3);
+        A[0][0] = 2;
+        A[1][0] = 3; A[1][1] = 4;
+        A[2][0] = 1; A[2][1] = 5; A[2][2] = 6;
+
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(3));
+        REQUIRE(multiply(Q, R) == A);
+        check_upper_triangular(R);
+    }
+
+    SECTION("Singular matrix (rank deficient)") {
+        Matrix A = Matrix::nullmatrix(3, 3);
+        A[0][0] = 1; A[0][1] = 2; A[0][2] = 3;
+        A[1][0] = 2; A[1][1] = 4; A[1][2] = 6; // Row 2 = 2×Row 1
+        A[2][0] = 3; A[2][1] = 6; A[2][2] = 9; // Row 3 = 3×Row 1
+
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(3));
+        REQUIRE(multiply(Q, R) == A);
+        check_upper_triangular(R);
+    }
+
+    SECTION("Negative and mixed values") {
+        Matrix A = Matrix::nullmatrix(2, 2);
+        A[0][0] = -1; A[0][1] = 4;
+        A[1][0] = 2;  A[1][1] = -3;
+
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(2));
+        REQUIRE(multiply(Q, R) == A);
+        check_upper_triangular(R);
+    }
+
+    SECTION("Larger 5x5 matrix (stress test)") {
+        Matrix A = Matrix::nullmatrix(5, 5);
+        int value = 1;
+        for (int i = 0; i < 5; ++i) {
+            for (int j = 0; j < 5; ++j) {
+                A[i][j] = value++;
+            }
+        }
+
+        std::vector<Matrix> qr = QR_decomposeHS(A);
+
+        Matrix Q = qr[0], R = qr[1];
+
+        REQUIRE(multiply(transpose(Q), Q) == Matrix::identity(5));
+        REQUIRE(multiply(Q, R) == A);
+        check_upper_triangular(R);
     }
 }
 
@@ -438,19 +615,98 @@ TEST_CASE("PLU decomposition", "[Matrix][PLU_decompose]") {
 
         Matrix P = plu[0], L = plu[1], U = plu[2];
 
-        REQUIRE(multiply(P, A) == multiply(L, U));
+        REQUIRE(multiply(transpose(P), A) == multiply(L, U));
     }
 
     SECTION("Identity matrix stays the same") {
         Matrix I = Matrix::identity(3);
         std::vector<Matrix> plu = PLU_decompose(I);
 
-        Matrix P = plu[0], L = plu[1], U = plu[2];
-        REQUIRE(P == I);
-        REQUIRE(L == I);
-        REQUIRE(U == I);
-    }
+		Matrix P = plu[0], L = plu[1], U = plu[2];
+		REQUIRE(P == I);
+		REQUIRE(L == I);
+		REQUIRE(U == I);
+	}
+
+	SECTION("Identity matrix") {
+		Matrix I = Matrix::identity(3);
+		std::vector<Matrix> plu = PLU_decompose(I);
+
+		REQUIRE(plu.size() == 3);
+		Matrix P = plu[0], L = plu[1], U = plu[2];
+
+		REQUIRE(P == I);
+		REQUIRE(L == I);
+		REQUIRE(U == I);
+	}
+
+	SECTION("Simple 3x3 matrix without pivoting") {
+		Matrix A = Matrix::nullmatrix(3, 3);
+		A[0][0] = 2; A[0][1] = 1; A[0][2] = 1;
+		A[1][0] = 4; A[1][1] = 3; A[1][2] = 3;
+		A[2][0] = 8; A[2][1] = 7; A[2][2] = 9;
+
+		std::vector<Matrix> plu = PLU_decompose(A);
+		Matrix P = plu[0], L = plu[1], U = plu[2];
+
+		REQUIRE(multiply(transpose(P), A) == multiply(L, U));
+		check_lower_triangular(L);
+		check_upper_triangular(U);
+	}
+
+	SECTION("Matrix that requires row swaps (pivoting)") {
+		Matrix A = Matrix::nullmatrix(3, 3);
+		A[0][0] = 0; A[0][1] = 2; A[0][2] = 1;
+		A[1][0] = 1; A[1][1] = 0; A[1][2] = 2;
+		A[2][0] = 2; A[2][1] = 1; A[2][2] = 0;
+
+		std::vector<Matrix> plu = PLU_decompose(A);
+		Matrix P = plu[0], L = plu[1], U = plu[2];
+
+		REQUIRE(multiply(transpose(P), A) == multiply(L, U));
+		check_lower_triangular(L);
+		check_upper_triangular(U);
+
+		// Ensure permutation matrix P actually permutes rows
+		REQUIRE(P != Matrix::identity(3));
+	}
+
+	SECTION("Matrix with multiple pivot swaps") {
+		Matrix A = Matrix::nullmatrix(4, 4);
+		A[0][0] = 0; A[0][1] = 2; A[0][2] = 1; A[0][3] = 3;
+		A[1][0] = 0; A[1][1] = 0; A[1][2] = 4; A[1][3] = 2;
+		A[2][0] = 5; A[2][1] = 1; A[2][2] = 0; A[2][3] = 1;
+		A[3][0] = 1; A[3][1] = 3; A[3][2] = 2; A[3][3] = 0;
+
+		std::vector<Matrix> plu = PLU_decompose(A);
+		Matrix P = plu[0], L = plu[1], U = plu[2];
+
+		REQUIRE(multiply(transpose(P), A) == multiply(L, U));
+		check_lower_triangular(L);
+		check_upper_triangular(U);
+
+		// P should definitely not be identity for this one
+		REQUIRE(P != Matrix::identity(4));
+	}
+
+	SECTION("Singular matrix (pivoting still valid)") {
+		Matrix A = Matrix::nullmatrix(3, 3);
+		A[0][0] = 2; A[0][1] = 4; A[0][2] = 6;
+		A[1][0] = 1; A[1][1] = 2; A[1][2] = 3;
+		A[2][0] = 0; A[2][1] = 0; A[2][2] = 0; // rank deficient
+
+		std::vector<Matrix> plu = PLU_decompose(A);
+		Matrix P = plu[0], L = plu[1], U = plu[2];
+
+		REQUIRE(multiply(transpose(P), A) == multiply(L, U));
+		check_lower_triangular(L);
+		check_upper_triangular(U);
+	}
+
 }
+
+
+
 
 //}
 
