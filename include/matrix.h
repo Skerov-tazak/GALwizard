@@ -1,11 +1,12 @@
 #pragma once
 #include<vector>
+#include"../src/complex/number.h"
 #include<iostream>
 //{ MATRIX CLASS DECLARATION
 class Matrix
 {
 	private:
-		std::vector<std::vector<float>> data;
+		std::vector<std::vector<number>> data;
 		
 		Matrix(unsigned int); // Identity Matrix constructor
 							  
@@ -14,8 +15,8 @@ class Matrix
 		Matrix(); // creates an empty matrix
 				  
 	public:
-	
-		Matrix(std::vector<std::vector<float>>); // constructs a full Matrix (ROW BY ROW)
+
+		Matrix(const std::vector<std::vector<number>>&); // constructs a full Matrix (ROW BY ROW)
 		
 		bool is_empty(); // returns whether it is an empty matrix
 
@@ -23,15 +24,15 @@ class Matrix
 		
 		int cols()const; // Returns number of columns
 	
-		void push_back_col(std::vector<float>); // adds a column at the back
+		void push_back_col(std::vector<number>); // adds a column at the back
 		
-		void push_back_row(std::vector<float>); // adds a row at the back
+		void push_back_row(std::vector<number>); // adds a row at the back
 		
 		void swap_rows(unsigned int,unsigned int); // swaps two rows
 
-		std::vector<float>& operator[](unsigned int); // Operator overload for getting data
+		std::vector<number>& operator[](unsigned int); // Operator overload for getting data
 
-		float at(unsigned int, unsigned int)const; // returns value at index
+		number at(unsigned int, unsigned int)const; // returns value at index
 
 		void append(Matrix); // Appends another matrix on the right of this one
 
@@ -45,9 +46,11 @@ class Matrix
 
 		static Matrix empty();	// returns an empty matrix;
 
-		std::vector<float> get_row(unsigned int)const; // returns a row in vector form
+		static Matrix column(const std::vector<number>&);
 
-		std::vector<float> get_col(unsigned int)const; // returns a column in vector form
+		std::vector<number> get_row(unsigned int)const; // returns a row in vector form
+
+		std::vector<number> get_col(unsigned int)const; // returns a column in vector form
 };
 //}
 

@@ -27,8 +27,6 @@ auto check_lower_triangular = [](const Matrix& L) {
 
 TEST_CASE("Overloading Equals"){
 
-
-
 	SECTION(" Square Tests ") {
 
 		Matrix test({{1,2,3},{4,3,2},{5,2,1}});
@@ -126,10 +124,10 @@ TEST_CASE("Basic Arithmetic", "[Matrix]") {
             A[0][0] = 1; A[0][1] = 2; A[0][2] = 3;
             A[1][0] = 4; A[1][1] = 5; A[1][2] = 6;
 
-            std::vector<float> v = {0, 0, 0};
-            std::vector<float> expected = {0, 0};
+            std::vector<number> v = {0, 0, 0};
+            std::vector<number> expected = {0, 0};
 
-            std::vector<float> result = multiply(A, v);
+            std::vector<number> result = multiply(A, v);
 
             REQUIRE(result == expected);
         }
@@ -159,7 +157,7 @@ TEST_CASE("Basic Arithmetic", "[Matrix]") {
         A[0][0] = 1; A[0][1] = -2;
         A[1][0] = 3; A[1][1] = -4;
 
-        float scalar = 2.0f;
+        number scalar = 2.0f;
 
         Matrix expected = Matrix::nullmatrix(2, 2);
         expected[0][0] = 2; expected[0][1] = -4;
@@ -180,8 +178,8 @@ TEST_CASE("Equality of spaces"){
 
 	SECTION("Colinearity of Vectors"){
 
-		std::vector<float> one = {1,0};
-		std::vector<float> two = {-1,0};
+		std::vector<number> one = {1,0};
+		std::vector<number> two = {-1,0};
 
 		REQUIRE(vectors_colinear(one,two));
 
@@ -324,6 +322,59 @@ TEST_CASE("inverse", "[Matrix]") {
 //}
 
 //{ Nullspace Tests
+TEST_CASE("Nullspace and singular linear systems with number type", "[Matrix][nullspace][solve]") {
+
+    SECTION("Simple singular matrix with nullspace (2x2)") {
+        Matrix A = Matrix::nullmatrix(2, 2);
+        A[0][0] = number(1); A[0][1] = number(2);
+        A[1][0] = number(2); A[1][1] = number(4); // rank 1
+
+        Matrix ns = nullspace(A);
+
+        // Nullspace should include a null vector in column 0, and 1 valid vector in column 1
+        REQUIRE(ns.cols() == 2); 
+        REQUIRE(ns[0][0] == number(0));
+        REQUIRE(ns[1][0] == number(0));
+
+        // Check that column 1 is indeed a valid nullspace vector
+        Matrix null_vec = Matrix::nullmatrix(2, 1);
+        null_vec[0][0] = ns[0][1];
+        null_vec[1][0] = ns[1][1];
+
+        REQUIRE(multiply(A, null_vec) == Matrix::nullmatrix(2, 1));
+
+        // Check orthogonality with transpose (future Hermitian)
+        Matrix ns_check = multiply(transpose(null_vec), null_vec);
+        REQUIRE(ns_check[0][0] != number(0));
+    }
+
+    SECTION("3x3 matrix with imaginary nullspace") {
+        Matrix A = Matrix::nullmatrix(3, 3);
+        A[0][0] = number(1);  A[0][1] = number(2);  A[0][2] = i();
+        A[1][0] = number(2);  A[1][1] = number(4);  A[1][2] = 2*i();
+        A[2][0] = number(-1); A[2][1] = number(-2); A[2][2] = -i();
+
+        Matrix ns = nullspace(A);
+
+        // First column should be null vector
+        REQUIRE(ns.cols() >= 2);
+        for (int r = 0; r < ns.rows(); ++r)
+            REQUIRE(ns[r][0] == number(0));
+
+        // Validate remaining nullspace vectors
+        for (int c = 1; c < ns.cols(); ++c) {
+            Matrix vec = Matrix::nullmatrix(3, 1);
+            for (int r = 0; r < 3; ++r) vec[r][0] = ns[r][c];
+
+            REQUIRE(multiply(A, vec) == Matrix::nullmatrix(3, 1));
+        }
+
+        // Check Gram matrix of nullspace vectors using transpose
+        Matrix ns_gram = multiply(transpose(ns), ns);
+        REQUIRE(ns_gram.rows() == ns.cols());
+        REQUIRE(ns_gram.cols() == ns.cols());
+    }
+}
 
 TEST_CASE("Nullspace", "[Matrix][nullspace]") {
 
@@ -709,5 +760,101 @@ TEST_CASE("PLU decomposition", "[Matrix][PLU_decompose]") {
 
 
 //}
+
+//}
+
+//{ Solve System 
+
+TEST_CASE("solve_system tests", "[Matrix][solve_system]") {
+
+    SECTION("Unique solution (2x2 system)") {
+        Matrix A = Matrix::nullmatrix(2, 2);
+        A[0][0] = number(2); A[0][1] = number(1);
+        A[1][0] = number(5); A[1][1] = number(7);
+
+        std::vector<number> b = { number(11), number(13) };
+
+        auto result = solve_system(A, b);
+
+        REQUIRE(result.size() == 2);
+
+        Matrix nullspace = result[0];
+        Matrix particular = result[1];
+
+        // Nullspace should be only the zero vector
+        REQUIRE(nullspace.cols() == 1);
+        for (int r = 0; r < nullspace.rows(); ++r)
+            REQUIRE(nullspace[r][0] == number(0));
+
+        // Verify that Ax = b
+        Matrix check = multiply(A, particular);
+        REQUIRE(check[0][0] == b[0]);
+        REQUIRE(check[1][0] == b[1]);
+    }
+
+    SECTION("Infinite solutions (rank-deficient 2x2)") {
+        Matrix A = Matrix::nullmatrix(2, 2);
+        A[0][0] = number(1); A[0][1] = number(2);
+        A[1][0] = number(2); A[1][1] = number(4); // row 2 = 2 × row 1
+
+        std::vector<number> b = { number(3), number(6) };
+
+        auto result = solve_system(A, b);
+
+        REQUIRE(result.size() == 2);
+
+        Matrix nullspace = result[0];
+        Matrix particular = result[1];
+
+        // Nullspace should include the zero vector and at least one valid vector
+        REQUIRE(nullspace.cols() >= 2);
+        for (int r = 0; r < nullspace.rows(); ++r)
+            REQUIRE(nullspace[r][0] == number(0));
+
+        // Verify that Ax = b for particular solution
+        REQUIRE(multiply(A, particular)[0][0] == b[0]);
+        REQUIRE(multiply(A, particular)[1][0] == b[1]);
+
+        // Adding any nullspace vector (excluding the null vector) should still satisfy Ax = b
+        Matrix test_solution = particular + Matrix::column(nullspace.get_col(1)) * number(3);
+        REQUIRE(multiply(A, test_solution) == multiply(A, particular));
+    }
+
+    SECTION("Inconsistent system") {
+        Matrix A = Matrix::nullmatrix(2, 2);
+        A[0][0] = number(1); A[0][1] = number(1);
+        A[1][0] = number(1); A[1][1] = number(1); // same row
+
+        std::vector<number> b = { number(1), number(2) }; // inconsistent
+
+        auto result = solve_system(A, b);
+
+        REQUIRE(result.empty()); // No solution
+    }
+
+    SECTION("Complex system with unique solution") {
+        Matrix A = Matrix::nullmatrix(2, 2);
+        A[0][0] = number(1);  A[0][1] = i();
+        A[1][0] = i();        A[1][1] = number(1);
+
+        std::vector<number> b = { number(1, 1), number(2, -1) };
+
+        auto result = solve_system(A, b);
+        REQUIRE(result.size() == 2);
+
+        Matrix nullspace = result[0];
+        Matrix particular = result[1];
+
+        // Nullspace should be only zero vector
+        REQUIRE(nullspace.cols() == 1);
+        REQUIRE(nullspace[0][0] == number(0));
+        REQUIRE(nullspace[1][0] == number(0));
+
+        // Verify Ax = b
+        Matrix check = multiply(A, particular);
+        REQUIRE(check[0][0] == b[0]);
+        REQUIRE(check[1][0] == b[1]);
+    }
+}
 
 //}

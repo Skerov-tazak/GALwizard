@@ -9,22 +9,35 @@ Matrix::Matrix()
 
 Matrix::Matrix(unsigned int rows, unsigned int cols)
 {
-	std::vector<float> dummy(cols,0);
+	std::vector<number> dummy(cols,0);
 	data.resize(rows,dummy);
 }
 
 Matrix::Matrix(unsigned int size)
 {
-	std::vector<float> dummy(size,0);
+	std::vector<number> dummy(size,0);
 	data.resize(size,dummy);
 	for(int i = 0; i < size; i++)
 		data[i][i] = 1;
 }
 
 
-Matrix::Matrix(std::vector<std::vector<float>> input)
+Matrix::Matrix(const std::vector<std::vector<number>>& input)
 { 
 	data = input;
+}
+
+Matrix Matrix::column(const std::vector<number>& col) {
+
+		Matrix created;
+        unsigned int n = col.size();
+        
+		created.data = std::vector<std::vector<number>>(n, std::vector<number>(1));
+
+        for (int i = 0; i < n; ++i)
+            created.data[i][0] = col[i];
+
+		return created;
 }
 
 bool Matrix::is_empty(){
@@ -50,7 +63,7 @@ int Matrix::cols()const
 	return data[0].size();
 }
 
-void Matrix::push_back_col(std::vector<float> new_col)
+void Matrix::push_back_col(std::vector<number> new_col)
 {
 	if(rows() == 0)
 	{
@@ -70,7 +83,7 @@ void Matrix::push_back_col(std::vector<float> new_col)
 	}
 }
 
-void Matrix::push_back_row(std::vector<float> new_row)
+void Matrix::push_back_row(std::vector<number> new_row)
 {
 	if(cols() != 0 && new_row.size() != cols())
 		throw std::invalid_argument("push_back_row(): invalid row length");
@@ -87,12 +100,12 @@ void Matrix::append(Matrix to_append)
 		push_back_col(to_append.get_col(i));
 }
 
-std::vector<float>& Matrix::operator[](unsigned int index)
+std::vector<number>& Matrix::operator[](unsigned int index)
 {
 	return data[index];	
 }
 
-float Matrix::at(unsigned int row, unsigned int col)const{
+number Matrix::at(unsigned int row, unsigned int col)const{
 
 		
 	return data.at(row).at(col);
@@ -141,18 +154,18 @@ Matrix Matrix::empty()
 	return Matrix();
 }
 
-std::vector<float> Matrix::get_row(unsigned int index)const
+std::vector<number> Matrix::get_row(unsigned int index)const
 {
 	if(index >= rows())
 		throw std::invalid_argument("get_row(): invalid row index");
 	return data[index];
 }
 
-std::vector<float> Matrix::get_col(unsigned int index)const
+std::vector<number> Matrix::get_col(unsigned int index)const
 {
 	if(index >= cols())
 		throw std::invalid_argument("get_col(): invalid col index");
-	std::vector<float> answer(rows(),0);
+	std::vector<number> answer(rows(),0);
 	for(int i = 0; i < rows(); i++)
 		answer[i] = data[i][index];
 

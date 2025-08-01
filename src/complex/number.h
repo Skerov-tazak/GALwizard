@@ -1,5 +1,15 @@
 #include<cmath>
+#include<stdexcept>
+#include<vector>
 #include <ostream>
+
+constexpr double EPS = 1e-6;
+
+constexpr inline bool approx_equal(double a, double b) {return std::fabs(a - b) < EPS;}
+
+constexpr inline bool is_zero(double x) {return approx_equal(x, 0);}
+
+constexpr inline double round_for_zero(double x) {if(is_zero(x)){return 0.0;}else{return x;}}
 
 class number{
 
@@ -25,17 +35,21 @@ class number{
 
 		constexpr inline double im()const noexcept {return imaginary;} // returns the imaginary part 
 
-		inline double angle()const {return (real == 0.0 && imaginary == 0 ? 0.0 : atan(imaginary/real));} // returns the angle 
+		constexpr inline bool is_real() const { return is_zero(imaginary); }
+
+		constexpr inline bool is_imag() const { return is_zero(real); }
 
 		constexpr inline double radius_squared()const noexcept {return imaginary * imaginary + real * real;} // returns the radius 
 
 		inline double radius()const {return std::hypot(imaginary, real);}
 
-		number power(double)const; // returns the number to any real power 
+		std::vector<number> roots(unsigned int)const;
+
+		number power(number)const; // returns the number to any complex power 
+
+		double angle()const; // returns the angle 
 
 		number copy()const;
-		
-		number conj()const;
 		
 		number normalised()const;
 
@@ -49,6 +63,8 @@ class number{
 
 		number& operator*=(const number&);
 
+		explicit operator bool() const noexcept { return (*this == 0.0); }
+
 		number& operator*=(double);
 
 		number& operator/=(double);
@@ -59,7 +75,15 @@ class number{
 
 		friend bool operator==(const number&, const number&);
 
+		friend bool operator==(const number&, double);
+
+		friend bool operator==(double, const number&);
+
 		friend bool operator!=(const number&, const number&);
+
+		friend bool operator!=(const number&, double);
+
+		friend bool operator!=(double, const number&);
 
 		friend number operator*(number, const number&);
 
@@ -86,19 +110,26 @@ class number{
 		friend number operator-(number, double);
 
 		friend number operator-(const number&);
-	
-		static number from_polar(double, double);
 		
-		static std::pair<double, double> to_polar(const number&); // returns the euler form as std::pair 
-																  
-		static inline number i() {return number(0.0, 1.0);}
+		friend number conj(const number&);
+
+		friend number from_polar(double, double);
+
+		friend std::pair<double, double> to_polar(const number&); // returns the euler form as std::pair 
+	
+		friend number ln(const number&);
+
+		friend number exp(const number&);
+
+		friend number cos(const number&);
+		
+		friend number sin(const number&);
+
+		friend number tan(const number&);
 
 };
 
-
-bool approx_equal(double a, double b);
-
-bool is_zero(double number);
+inline number i() {return number(0.0, 1.0);}
 
 std::ostream& operator<<(std::ostream&, const number&);
 

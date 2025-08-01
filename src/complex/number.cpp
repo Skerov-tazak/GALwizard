@@ -1,8 +1,5 @@
-#include"complex.h"
+#include"number.h"
 #include <cmath>
-#include <stdexcept>
-
-constexpr double EPS = 1e-6;
 
 //{ Constructors
 
@@ -24,28 +21,32 @@ number::number(double a, double b){
 
 //}
 
-//{ Utility Functions
+//{ Basic Functions
 
-bool approx_equal(double a, double b){
-	
-	return std::fabs(a - b) < EPS;
+double number::angle()const{
+
+	if(is_zero(imaginary)){
+		
+		if(is_zero(real) || real > 0)
+			return 0.0;
+		else 
+			return M_PI;
+
+	}
+	else if(is_zero(real)){
+
+		return M_PI/2;
+	}
+	else 
+		return atan(imaginary/real);
 }
 
-bool is_zero(double number)
-{
-	return approx_equal(number, 0);
-}
-
-//}
-
-//{ Basic Member Functions
-
-number number::from_polar(double r, double t){
+number from_polar(double r, double t){
 	
 	return number(r * cos(t), r * sin(t));
 }
 
-std::pair<double, double> number::to_polar(const number& a){
+std::pair<double, double> to_polar(const number& a){
 	
 	return {a.radius(), a.angle()};
 }
@@ -55,21 +56,9 @@ number number::copy()const{
 	return number(real, imaginary); 
 }
 
-number number::conj()const{
+number conj(const number& a){
 
-	return number(real, -imaginary);
-}
-
-number number::power(double x)const{
-
-	if(x == 2){
-		return copy();
-	}
-
-	std::pair<double,double> euler_form = to_polar(*this);
-	euler_form.second = euler_form.second * x;
-	euler_form.first = pow(euler_form.first, x);
-	return from_polar(euler_form.first, euler_form.second);
+	return number(a.real, -a.imaginary);
 }
 
 number number::normalised()const {
@@ -84,9 +73,62 @@ number number::normalised()const {
 
 number number::rotate(double theta)const {
 
-    return *this * from_euler(1.0, theta);
+    return *this * from_polar(1.0, theta);
 }
 
+//}
+
+//{ Advanced Functions 
+
+number exp(const number& a)
+{
+    double exp_real = std::exp(a.real);
+
+    return number(exp_real * std::cos(a.imaginary), exp_real * std::sin(a.imaginary));
+}
+
+number ln(const number& a)
+{
+	return number(std::log(a.radius()), a.angle());
+}
+
+number number::power(number x)const{
+
+	if(x == 1)
+		return copy();
+	
+	if(x == 2)
+		return copy()*copy();
+
+	return exp((ln(*this) * x));
+}
+
+number cos(const number& a){
+ 
+	return number(std::cos(a.real) * std::cosh(a.imaginary), -std::sin(a.real) * std::sinh(a.imaginary));
+}
+
+number sin(const number& a){
+	
+	return number(std::sin(a.real) * std::cosh(a.imaginary),std::cos(a.real) * std::sinh(a.imaginary));
+}
+
+number tan(const number& a){
+	
+	return sin(a)/cos(a);
+}
+
+std::vector<number> number::roots(unsigned int n)const{
+
+	std::vector<number> roots;
+	double r = std::pow(radius(), 1.0/n);
+	double t = angle();
+
+	for (unsigned int k = 0; k < n; k++)
+		roots.emplace_back(from_polar(r, (t + 2*M_PI*k) / n));
+
+	return roots;
+}
 
 
 //}
@@ -118,7 +160,7 @@ number operator/(double b, number a){
 	if(is_zero(r))
 		throw std::invalid_argument("Division by zero not allowed");
 
-	a = (b * a.conj())/r;
+	a = (b * conj(a))/r;
 
 	return a; 
 }
@@ -140,7 +182,7 @@ number operator/(number a, const number& b){
 	if(is_zero(r))
 		throw std::invalid_argument("Division by zero not allowed");
 	
-	a = (a * b.conj())/r;
+	a = (a * conj(b))/r;
  
 	return a;
 }
@@ -192,12 +234,31 @@ number operator-(const number& a){
 bool operator==(const number& a, const number& b){
 
 	return (approx_equal(a.re(), b.re()) && approx_equal(a.im(), b.im()));
-
 }
 
-bool operator-=(const number& a, const number& b){
+bool operator==(const number& a, double b){
+
+	return (approx_equal(a.real, b) && is_zero(a.imaginary));
+}
+
+bool operator==(double b, const number& a){
+	
+	return (a == b);
+}
+
+bool operator!=(const number& a, const number& b){
 
 	return !(a == b);
+}
+
+bool operator!=(const number& a, double b){
+
+	return !(a == b);
+}
+
+bool operator!=(double b, const number& a){
+	
+	return !(b == a);
 }
 
 number& number::operator+=(const number& rhs) {
@@ -265,10 +326,16 @@ number& number::operator-=(double s){
 
 std::ostream& operator<<(std::ostream& os, const number& number){
 
-	os << number.re() << " + " << number.im() << "i";
+	if(number.im() >= 0){
+		os << round_for_zero(number.re()) << " + " << round_for_zero(number.im()) << "i";
+	}else {
+		os << round_for_zero(number.re()) << " - " << round_for_zero(-number.im()) << "i";
+	}
 	return os;
 
 }
+
+
 //}
 
 
