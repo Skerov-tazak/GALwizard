@@ -105,9 +105,13 @@ std::vector<number>& Matrix::operator[](unsigned int index)
 	return data[index];	
 }
 
-number Matrix::at(unsigned int row, unsigned int col)const{
+number& Matrix::at(unsigned int row, unsigned int col){
 
-		
+	return data.at(row).at(col);
+}
+
+const number& Matrix::at(unsigned int row, unsigned int col)const{
+
 	return data.at(row).at(col);
 }
 

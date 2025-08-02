@@ -2,7 +2,7 @@
 #include<vector>
 #include"../src/complex/number.h"
 #include<iostream>
-//{ MATRIX CLASS DECLARATION
+
 class Matrix
 {
 	private:
@@ -32,8 +32,10 @@ class Matrix
 
 		std::vector<number>& operator[](unsigned int); // Operator overload for getting data
 
-		number at(unsigned int, unsigned int)const; // returns value at index
+		number& at(unsigned int, unsigned int); // returns refernce to value at index
 
+		const number& at(unsigned int, unsigned int)const;
+		
 		void append(Matrix); // Appends another matrix on the right of this one
 
 		Matrix split_right(unsigned int); // returns submatrix to the right of this index (Included)
@@ -52,5 +54,5 @@ class Matrix
 
 		std::vector<number> get_col(unsigned int)const; // returns a column in vector form
 };
-//}
+
 

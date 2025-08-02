@@ -5,14 +5,12 @@
 int main() {
 
 
-	
-		Matrix A = Matrix::nullmatrix(2, 2);
-        A[0][0] = 4; A[0][1] = 7;
-        A[1][0] = 2; A[1][1] = 6;
-
-		print(A);
-		print(inverse(A));
 		
-		print(multiply(A,inverse(A)));
+		Matrix A = Matrix::nullmatrix(4, 4);
+		A[0][0] = 0; A[0][1] = 2; A[0][2] = 1; A[0][3] = 3;
+		A[1][0] = 0; A[1][1] = 0; A[1][2] = 4; A[1][3] = 2;
+		A[2][0] = 5; A[2][1] = 1; A[2][2] = 0; A[2][3] = 1;
+		A[3][0] = 1; A[3][1] = 3; A[3][2] = 2; A[3][3] = 0;
 
 }
+

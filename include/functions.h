@@ -52,6 +52,9 @@ int rank(Matrix); // returns the rank of the matrix
 number determinant(Matrix);// returns the determinant
 std::vector<number> pivots(Matrix); // returns the list of pivots of this matrix
 std::vector<number> eigenvalues(Matrix); // returns the eigenvalues
+void transform_into_upper_hessenberg(Matrix&);
+void rotate_givens_similarity(unsigned int, unsigned int, unsigned int, Matrix&);
+void rotate_givens(unsigned int, unsigned int, unsigned int, Matrix&);
 Matrix eigenvectors(Matrix); // returns the eigenvectors of the matrix
 
 

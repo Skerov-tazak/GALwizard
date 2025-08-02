@@ -1,4 +1,5 @@
 #include "../include/functions.h"
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <vector>
@@ -598,12 +599,77 @@ Matrix projection(Matrix matrix)
 
 //}
 
-//{ Givens Rotations 
+//{ Givens Rotations, Hessenberg forms 
 
-void RotateGivens(unsigned int row, unsigned int col, Matrix& matrix){
+void transform_into_upper_hessenberg(Matrix& matrix){
 
+	for(int i = 0; i < matrix.cols() - 2; i++){
+		for(int j = i + 2; j < matrix.rows(); j++){
 			
+			rotate_givens_similarity(j, i + 1, i, matrix);
+		}
+	}
+} 
 
+void rotate_givens_similarity(unsigned int row_zero, unsigned int row_len, unsigned int col, Matrix& matrix) // Perform givens rotation
+{		   																								 // While right multiplying by transpose
+
+	if(row_zero == row_len)
+		throw std::invalid_argument("The row that is zeroed must be different from the row that takes the length");
+
+	number a = matrix.at(row_zero, col);
+	number b = matrix.at(row_len, col);
+
+	double normalisation = std::sqrt(a.radius_squared() + b.radius_squared());
+
+	number c_factor = b/normalisation; 
+	number s_factor = a/normalisation;
+
+		
+
+	for(int i = 0; i < matrix.cols(); i++){
+
+
+		number temp = matrix.at(row_zero, i);
+		matrix.at(row_zero, i) = test_zero(c_factor * matrix.at(row_zero,i) - s_factor * matrix.at(row_len,i));
+		matrix.at(row_len, i) = c_factor * matrix.at(row_len,i) + s_factor * temp; 
+	}	
+
+	// Here we transpose the givens matrix and right multiply 
+	
+	c_factor = conj(c_factor);
+	s_factor = conj(s_factor);
+
+	for(int i = 0; i < matrix.rows(); i++){
+
+		number temp = matrix.at(i, row_zero);
+		matrix.at(i, row_zero) = c_factor * matrix.at(i, row_zero) - s_factor * matrix.at(i, row_len); 
+		matrix.at(i, row_len) = c_factor * matrix.at(i, row_len) + s_factor *  temp;
+	}
+
+
+}
+
+void rotate_givens(unsigned int row_zero, unsigned int row_len, unsigned int col, Matrix& matrix){
+
+	if(row_zero == row_len)
+		throw std::invalid_argument("The row that is zeroed must be different from the row that takes the length");
+
+	number a = matrix.at(row_zero, col);
+	number b = matrix.at(row_len, col);
+
+	double normalisation = std::sqrt(a.radius_squared() + b.radius_squared());
+
+	number c_factor = b/normalisation; 
+	number s_factor = a/normalisation;
+
+	for(int i = 0; i < matrix.cols(); i++){
+
+		number temp = matrix.at(row_zero,i);
+		matrix.at(row_zero, i) = test_zero(-s_factor * matrix.at(row_len,i) + c_factor * matrix.at(row_zero,i));
+		matrix.at(row_len, i) = c_factor * matrix.at(row_len,i) + s_factor * temp; 
+
+	}	
 }
 
 
@@ -918,10 +984,11 @@ number determinant(Matrix matrix)
 
 		if(pivot_row < matrix.rows()) // if none is found, skips this column
 		{
+			if(pivot_row != row){
+				matrix.swap_rows(pivot_row, row); // if there is one, swaps rows
+				determinant = determinant * (-1);	
+			}
 
-			matrix.swap_rows(pivot_row, row); // if there is one, swaps rows
-			determinant = determinant * (-1);	
-			
 			clear_pivot_column(matrix, row, col);
 
 			row++;
@@ -965,8 +1032,7 @@ number power_method(Matrix matrix, int iterations)
 
 std::vector<number> eigenvalues(Matrix matrix) // utilises the QR algorithm to compute the eigenvalues
 {
-	Matrix A = matrix;
-	
+	transform_into_upper_hessenberg(matrix);
 		
 		
 	
