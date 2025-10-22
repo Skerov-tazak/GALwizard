@@ -26,4 +26,4 @@ This is a basic c++ library implementing complex numbers, matrix operations and 
 
 ## Testing
 
-This repo also includes a fully functional unit testing system, utilising the catch2 c++ unit testing framework. The relevant tests are all included in the `test` directory.
+This repo also includes a fully functional unit testing system, utilising the catch2 C++ unit testing framework. The relevant tests are all included in the `test` directory.
