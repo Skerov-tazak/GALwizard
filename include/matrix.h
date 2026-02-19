@@ -1,7 +1,7 @@
 #pragma once
 #include<vector>
-#include"../src/complex/number.h"
 #include<iostream>
+#include"number.h"
 
 namespace gal {
 

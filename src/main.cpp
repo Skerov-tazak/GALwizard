@@ -1,4 +1,4 @@
-#include"../include/functions.h"
+#include "functions.h"
 
 using namespace gal;
 using namespace std;

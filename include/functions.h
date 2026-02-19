@@ -1,5 +1,4 @@
 #include"matrix.h"
-#include <vector>
 
 //DECLARATION OF FUNCTIONS
 

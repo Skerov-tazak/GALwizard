@@ -3,7 +3,7 @@ project(GALwizard
 		VERSION 0.0.1
 		DESCRIPTION ""
 		LANGUAGES CXX)
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #This Includes the Catch2 Framework
 include(FetchContent)
 FetchContent_Declare(

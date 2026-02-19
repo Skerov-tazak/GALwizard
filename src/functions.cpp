@@ -1,4 +1,4 @@
-#include "../include/functions.h"
+#include "functions.h"
 #include <cmath>
 #include <stdexcept>
 #include <vector>
