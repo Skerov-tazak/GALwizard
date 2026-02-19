@@ -1,43 +1,70 @@
 #include "../include/functions.h"
-#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <vector>
 #include <iomanip> // for std::fixed and std::setprecision
 
+namespace gal {
+
 //{ Print functions 
-void print(Matrix to_print)
+void print(const Matrix& to_print)
 {
 	std::cout << std::fixed << std::setprecision(6);
-    const int fieldWidth = 13; 
-    
-    for (size_t i = 0; i < to_print.rows(); ++i) {
-        for (size_t j = 0; j < to_print.cols(); ++j) {
-          
-			std::cout << std::setw(fieldWidth) << to_print[i][j];   
+	const int fieldWidth = 13; 
+	
+	for (size_t i = 0; i < to_print.rows(); ++i) {
+		for (size_t j = 0; j < to_print.cols(); ++j) {
+		  
+			std::cout << std::setw(fieldWidth) << to_print.at(i,j);   
 			if (j + 1 < to_print.cols()) std::cout << " ";
 
-        }
+		}
 
-        std::cout << '\n';
-    }
+		std::cout << '\n';
+	}
 	std::cout << '\n';
 }
 
-void print(std::vector<number> to_print)
+std::ostream& operator<<(std::ostream& os, const Matrix& to_print)
+{
+	std::ios_base::fmtflags f(os.flags());
+	std::streamsize ss = os.precision();
+
+	os << std::fixed << std::setprecision(6);
+	const int fieldWidth = 13; 
+
+	for (size_t i = 0; i < to_print.rows(); ++i) {
+		for (size_t j = 0; j < to_print.cols(); ++j) {
+			
+			os << std::setw(fieldWidth) << to_print.at(i, j);
+			
+			if (j + 1 < to_print.cols()) {
+				os << " ";
+			}
+		}
+		os << '\n';
+	}
+
+	os.flags(f);
+	os.precision(ss);
+
+	return os;
+}
+
+void print(const std::vector<number>& to_print)
 {
 	std::cout << std::fixed << std::setprecision(6);
-    
-    const int fieldWidth = 13; 
-    
-    for (const number& val : to_print) 
-        std::cout << std::setw(fieldWidth) << val << '\n';
+	
+	const int fieldWidth = 13; 
+	
+	for (const number& val : to_print) 
+		std::cout << std::setw(fieldWidth) << val << '\n';
 }
 //}
 
 //{ Null validation functions
 
-bool is_nullvector(std::vector<number> vect)
+bool is_nullvector(const std::vector<number>& vect)
 {
 	for(number x : vect )
 	{
@@ -56,8 +83,10 @@ number test_zero(number number)
 
 }
 
-Matrix clear_zero_numbers(Matrix to_clear)
+Matrix clear_zero_numbers(const Matrix& a)
 {
+	Matrix to_clear = a;
+
 	for(int i = 0; i < to_clear.rows(); i++){
 		for(int j = 0; j < to_clear.cols(); j++){
 			to_clear[i][j] = test_zero(to_clear[i][j]);
@@ -70,7 +99,7 @@ Matrix clear_zero_numbers(Matrix to_clear)
 //}
 
 //{ Operators
-std::vector<number> operator+(std::vector<number> one, std::vector<number> two)
+std::vector<number> operator+(const std::vector<number>& one, const std::vector<number>& two)
 {
 	if(one.size() != two.size())
 		throw std::invalid_argument("operator+(): undefined addition of different length vectors");
@@ -83,7 +112,7 @@ std::vector<number> operator+(std::vector<number> one, std::vector<number> two)
 }
 
 
-std::vector<number> operator-(std::vector<number> one, std::vector<number> two)
+std::vector<number> operator-(const std::vector<number>& one, const std::vector<number>& two)
 {
 	if(one.size() != two.size())
 		throw std::invalid_argument("operator+(): undefined addition of different length vectors");
@@ -95,7 +124,7 @@ std::vector<number> operator-(std::vector<number> one, std::vector<number> two)
 	return answer;
 }
 
-Matrix operator+(Matrix one, Matrix two)
+Matrix operator+(const Matrix& one, const Matrix& two)
 {
 	if(one.rows() != two.rows() || one.cols() != two.cols())
 		throw std::invalid_argument("operator+(): undefined addition of two different size matrices");
@@ -105,13 +134,13 @@ Matrix operator+(Matrix one, Matrix two)
 	for(int i = 0; i < one.rows(); i++)
 	{
 		for(int j = 0; j < one.cols(); j++)
-			answer[i][j] = one[i][j] + two[i][j];
+			answer[i][j] = one.at(i,j) + two.at(i,j);
 	}
 
 	return answer;
 }
 
-Matrix operator-(Matrix one, Matrix two)
+Matrix operator-(const Matrix& one, const Matrix& two)
 {
 	if(one.rows() != two.rows() || one.cols() != two.cols())
 		throw std::invalid_argument("operator+(): undefined addition of two different size matrices");
@@ -121,14 +150,16 @@ Matrix operator-(Matrix one, Matrix two)
 	for(int i = 0; i < one.rows(); i++)
 	{
 		for(int j = 0; j < one.cols(); j++)
-			answer[i][j] = one[i][j] - two[i][j];
+			answer[i][j] = one.at(i,j) - two.at(i,j);
 	}
 
 	return answer;
 }
 
-Matrix operator-(Matrix one)
+Matrix operator-(const Matrix& a)
 {
+	Matrix one = a;
+
 	for(int i = 0; i < one.rows(); i++)
 	{
 		for(int j = 0; j < one.cols(); j++)
@@ -139,8 +170,10 @@ Matrix operator-(Matrix one)
 	return one;
 }
 
-std::vector<number> operator-(std::vector<number> one)
+std::vector<number> operator-(const std::vector<number>& a)
 {
+	std::vector<number> one = a;
+
 	for(int i = 0; i < one.size(); i++)
 	{
 		one[i] = -one[i];
@@ -148,43 +181,49 @@ std::vector<number> operator-(std::vector<number> one)
 	return one;
 }
 
-Matrix operator-(Matrix left, std::vector<number> right)
+Matrix operator-(const Matrix& left, const std::vector<number>& right)
 {
+	Matrix res = left;
+
 	if(left.cols() > 1)
 		throw(std::invalid_argument("operator-(): operation undefined"));
 
 	for(int i = 0; i < left.rows(); i++)
-		left[i][0] = left[i][0] - right[i];
+		res[i][0] = res[i][0] - right[i];
 	return left;
 }
 
-std::vector<number> operator*(number scalar, std::vector<number> vect)
+std::vector<number> operator*(number scalar, const std::vector<number>& vec)
 {
-	for(auto x : vect)
+	std::vector<number> vect = vec;
+	for(auto& x : vect)
 		x = x * scalar;
 	return vect;
 }
 
-std::vector<number> operator*(std::vector<number> vect, number scalar)
+std::vector<number> operator*(const std::vector<number>& vect, number scalar)
 {
 	return scalar*vect;
 }
 
-std::vector<number> operator/(std::vector<number> vect, number scalar) 
+std::vector<number> operator/(const std::vector<number>& vec, number scalar) 
 {
-	for(auto x : vect) 
+	std::vector<number> vect = vec;
+	for(auto& x : vect) 
 		x = x / scalar;
 	return vect;
 }
 
-Matrix operator/(Matrix matrix, number scalar)
+Matrix operator/(const Matrix& matrix, number scalar)
 {
 	number real = 1 / scalar;
 	return real * matrix;
 }
 
-Matrix operator*(number scalar,Matrix matrix)
+Matrix operator*(number scalar, const Matrix& m)
 {
+	Matrix matrix = m;
+
 	for(int i = 0; i < matrix.cols();i++)
 	{
 		for(int j = 0; j < matrix.rows(); j++)
@@ -197,7 +236,7 @@ Matrix operator*(number scalar,Matrix matrix)
 
 }
 
-Matrix operator*(Matrix matrix, number scalar){
+Matrix operator*(const Matrix& matrix, number scalar){
 	return scalar * matrix;
 }
 
@@ -246,7 +285,7 @@ bool operator!=(const std::vector<number>& lhs, const std::vector<number>& rhs){
 
 //{ Length
 
-double length(std::vector<number> vect)
+double length(const std::vector<number>& vect)
 {
 	double length = 0;
 
@@ -259,21 +298,21 @@ double length(std::vector<number> vect)
 	return length;
 }
 
-void normalise(std::vector<number> vect) 
+void normalise(std::vector<number>& vect) 
 {
 	double len = length(vect);
 
 	for(unsigned int i = 0; i < vect.size(); i++) 
 	{
 		vect[i] = vect[i] / len;
-	}		
+	}
 }
 
 //}
 
 //{ Inner products
 
-number inner_product(std::vector<number> one, std::vector<number> two)
+number inner_product(const std::vector<number>& one, const std::vector<number>& two)
 {
 	if(one.size() != two.size())
 		throw std::invalid_argument("inner_product(): undefined product of different length vectors");
@@ -288,13 +327,13 @@ number inner_product(std::vector<number> one, std::vector<number> two)
 //}
 
 //{ Transpose
-Matrix transpose(Matrix original)
+Matrix transpose(const Matrix& original)
 {
 	Matrix transposed = Matrix::nullmatrix(original.cols(),original.rows());
 
 	for(int i = 0; i < original.rows(); i++){
 		for(int j = 0; j < original.cols(); j++){
-			transposed[j][i] = original[i][j];
+			transposed[j][i] = original.at(i,j);
 		}
 	}
 
@@ -303,7 +342,7 @@ Matrix transpose(Matrix original)
 //}
 
 //{ Multiply
-Matrix multiply(Matrix left,Matrix right)
+Matrix multiply(const Matrix& left, const Matrix& right)
 {
 	if(left.cols() != right.rows())
 		throw std::invalid_argument("multiply(): this multiplication is not defined");
@@ -313,14 +352,14 @@ Matrix multiply(Matrix left,Matrix right)
 	for(int i = 0; i < answer.rows(); i++){
 		for(int j = 0; j < answer.cols(); j++){
 			for(int p = 0; p < left.cols(); p++){
-				answer[i][j] = test_zero(answer[i][j] + left[i][p]*right[p][j]);
+				answer[i][j] = test_zero(answer[i][j] + left.at(i,p)*right.at(p,j));
 			}
 		}
 	}
 	return answer;
 }
 
-std::vector<number> multiply(Matrix left,std::vector<number> right)
+std::vector<number> multiply(const Matrix& left, const std::vector<number>& right)
 {
 	if(left.cols() != right.size())
 		throw std::invalid_argument("multiply(): invalid vector length");
@@ -329,14 +368,14 @@ std::vector<number> multiply(Matrix left,std::vector<number> right)
 
 	for(int i = 0; i < left.rows(); i++){
 		for(int j = 0; j < left.cols(); j++){
-			answer[i] = test_zero(answer[i] + left[i][j] * right[j]);
+			answer[i] = test_zero(answer[i] + left.at(i,j) * right[j]);
 		}
 	}
 
 	return answer;
 }
 
-Matrix multiply(std::vector<number> left, std::vector<number> right) // treats left as vertical, right as horizontal
+Matrix multiply(const std::vector<number>& left, const std::vector<number>& right) // treats left as vertical, right as horizontal
 {
 	Matrix answer = Matrix::nullmatrix(left.size(), right.size());
 	
@@ -355,6 +394,7 @@ Matrix multiply(std::vector<number> left, std::vector<number> right) // treats l
 //{ Row Echelon form
 
 void clear_pivot_column(Matrix& matrix, unsigned int row, unsigned int col){
+	
 
 	number pivot = matrix[row][col];
 	for(int i = row + 1; i < matrix.rows(); i++) // for all rows
@@ -378,8 +418,10 @@ int find_nonzero_pivot(const Matrix& matrix, unsigned int row, unsigned int col)
 }
 
 
-Matrix row_echelon(Matrix matrix)
+Matrix row_echelon(const Matrix& m)
 {
+	Matrix matrix = m;
+
 	int col = 0;
 	int row = 0;
 
@@ -409,7 +451,7 @@ Matrix row_echelon(Matrix matrix)
 
 void clear_over_pivots(Matrix& matrix, std::vector<std::pair<unsigned int, unsigned int>>& pivot_indeces){
 
-	for(int i = pivot_indeces.size() - 1; i >= 0; i--) 	// for all pivots
+	for(int i = pivot_indeces.size() - 1; i >= 0; i--)	// for all pivots
 	{ 
 
 		number pivot = matrix.at(pivot_indeces.at(i).first,pivot_indeces[i].second);
@@ -429,6 +471,7 @@ void clear_over_pivots(Matrix& matrix, std::vector<std::pair<unsigned int, unsig
 }
 
 void ref_remember_pivots(Matrix& matrix, std::vector<std::pair<unsigned int, unsigned int>>& pivot_indeces){
+
 
 	int col = 0;
 	int row = 0;
@@ -451,8 +494,9 @@ void ref_remember_pivots(Matrix& matrix, std::vector<std::pair<unsigned int, uns
 	}
 }
 
-Matrix reduced_row_echelon(Matrix matrix)
-{	
+Matrix reduced_row_echelon(const Matrix& m)
+{
+	Matrix matrix = m;
 	std::vector<std::pair<unsigned int, unsigned int>> pivot_indeces; // keep track of pivots to clear 
 
 	// finds the next non-zero pivot
@@ -469,8 +513,9 @@ Matrix reduced_row_echelon(Matrix matrix)
 //}
 
 //{ Inverse
-Matrix inverse(Matrix matrix)
+Matrix inverse(const Matrix& m)
 {
+	Matrix matrix = m;
 	if(matrix.cols() != matrix.rows()) // check if the matrix is square
 		throw std::invalid_argument("inverse(): the matrix isn't square");
 
@@ -494,8 +539,10 @@ Matrix inverse(Matrix matrix)
 
 //{ Compare Spans 
 
-bool spaces_equal(Matrix A, Matrix B)
+bool spaces_equal(const Matrix& a, const Matrix& b)
 {
+	Matrix A = a;
+	Matrix B = b; 
 	
 	std::vector<std::pair<unsigned int, unsigned int>> pivots;
 
@@ -524,7 +571,7 @@ bool spaces_equal(Matrix A, Matrix B)
 	return true;
 }
 
-bool vectors_colinear(std::vector<number> v, std::vector<number> w){
+bool vectors_colinear(const std::vector<number>& v, const std::vector<number>& w){
 	
 	if(v.size() != w.size())
 		return false;
@@ -542,8 +589,9 @@ bool vectors_colinear(std::vector<number> v, std::vector<number> w){
 //}
 
 //{ Nullspace
-Matrix nullspace(Matrix matrix)
+Matrix nullspace(const Matrix& m)
 {
+	Matrix matrix = m;
 	// First get to the reduced row echelon form and remember pivots
 
 	std::vector<std::pair<unsigned int, unsigned int>> pivot_indeces; // keep track of pivots to clear 
@@ -589,7 +637,7 @@ Matrix nullspace(Matrix matrix)
 //}
 
 //{ Projections
-Matrix projection(Matrix matrix)
+Matrix projection(const Matrix& matrix)
 {
 	// uses the formula A*((At*A)^-1)*At (where At is the transpose of A, and ^-1 is the inverse)
 	Matrix transposed = transpose(matrix); // 
@@ -612,7 +660,7 @@ void transform_into_upper_hessenberg(Matrix& matrix){
 } 
 
 void rotate_givens_similarity(unsigned int row_zero, unsigned int row_len, unsigned int col, Matrix& matrix) // Perform givens rotation
-{		   																								 // While right multiplying by transpose
+{																										 // While right multiplying by transpose
 
 	if(row_zero == row_len)
 		throw std::invalid_argument("The row that is zeroed must be different from the row that takes the length");
@@ -676,7 +724,7 @@ void rotate_givens(unsigned int row_zero, unsigned int row_len, unsigned int col
 //}
 
 //{ Orthonormalise
-Matrix orthonormalise(Matrix matrix)
+Matrix orthonormalise(const Matrix& matrix)
 {
 	// uses the Gram-Schmidt method for finding an orthonormal basis of this matrix' column space
 	Matrix answer = Matrix::empty();
@@ -727,17 +775,17 @@ Matrix orthonormalise(Matrix matrix)
 
 //{ QR decomposition
 
-std::vector<number> householder_transform(std::vector<number> seed, std::vector<number> transformed)
+std::vector<number> householder_transform(const std::vector<number>& seed, const std::vector<number>& transformed)
 {
 	return transformed - (2 * (inner_product(seed, transformed)) / inner_product(seed, seed) ) * seed;
 }
 
-Matrix householder_matrix(std::vector<number> seed) 
+Matrix householder_matrix(const std::vector<number>& seed) 
 {
 	return Matrix::identity(seed.size()) - 2 * (multiply(seed, seed) / inner_product(seed, seed));
 }
 
-std::vector<Matrix> QR_decomposeHS(Matrix matrix) // Performs QR decomposition using Householder transformations
+std::vector<Matrix> QR_decomposeHS(const Matrix& matrix) // Performs QR decomposition using Householder transformations
 {
 	if(matrix.rows() != matrix.cols())
 		throw std::invalid_argument("QR_decompose(): only square matrices can be decomposed this way");
@@ -790,7 +838,7 @@ std::vector<Matrix> QR_decomposeHS(Matrix matrix) // Performs QR decomposition u
 	return QR;
 }
 
-std::vector<Matrix> QR_decomposeGS(Matrix matrix) // Permorms QR decomposition using the Gram-Schmidt process 
+std::vector<Matrix> QR_decomposeGS(const Matrix& matrix) // Permorms QR decomposition using the Gram-Schmidt process 
 {
 	if(matrix.rows() != matrix.cols())
 		throw std::invalid_argument("QR_decompose(): only square matrices can be decomposed this way");
@@ -824,7 +872,7 @@ std::vector<Matrix> QR_decomposeGS(Matrix matrix) // Permorms QR decomposition u
 		{
 			Matrix temp = Matrix::empty(); 
 			temp.push_back_col(Q.get_col(p));
-		 	number dot_product = inner_product(temp.get_col(0),column.get_col(0));
+			number dot_product = inner_product(temp.get_col(0),column.get_col(0));
 			R[p][j] = dot_product;
 			column = column - (dot_product * temp);// subtracts the part in this direction
 		}
@@ -848,8 +896,10 @@ std::vector<Matrix> QR_decomposeGS(Matrix matrix) // Permorms QR decomposition u
 //}
 
 //{ PLU decomposition
-std::vector<Matrix> PLU_decompose(Matrix matrix)
+std::vector<Matrix> PLU_decompose(const Matrix& m)
 {
+	Matrix matrix = m;
+
 	if(matrix.rows() != matrix.cols())
 		throw std::invalid_argument("PLU_decompose(): this operation is defined here only for square matrices");
 	std::vector<Matrix> PLU;
@@ -909,8 +959,10 @@ std::vector<Matrix> PLU_decompose(Matrix matrix)
 
 //{ Solve system
 
-std::vector<Matrix> solve_system(Matrix LHS, std::vector<number> RHS)
+std::vector<Matrix> solve_system(const Matrix& lhs, const std::vector<number>& RHS)
 {
+	Matrix LHS = lhs;
+
 	if(LHS.rows() != RHS.size())
 		throw std::invalid_argument("solve_system(): invalid system");
 
@@ -935,7 +987,7 @@ std::vector<Matrix> solve_system(Matrix LHS, std::vector<number> RHS)
 	if(NullSpace.cols() == 1)
 		return {Matrix::nullmatrix(particular_solution.rows(), 1), particular_solution};
 	else 
-		return  {NullSpace, particular_solution};
+		return	{NullSpace, particular_solution};
 	
 }
 
@@ -943,7 +995,7 @@ std::vector<Matrix> solve_system(Matrix LHS, std::vector<number> RHS)
 
 //{ Best solution
 
-std::vector<Matrix> best_solve(Matrix LHS, std::vector<number> RHS)
+std::vector<Matrix> best_solve(const Matrix& LHS, const std::vector<number>& RHS)
 {
 	return solve_system(LHS,multiply(projection(LHS),RHS));	
 
@@ -954,8 +1006,9 @@ std::vector<Matrix> best_solve(Matrix LHS, std::vector<number> RHS)
 
 //{ Rank
 
-int rank(Matrix matrix)
+int rank(const Matrix& m)
 {
+	Matrix matrix = m;
 	std::vector<std::pair<unsigned int, unsigned int>> pivot_indeces;
 	ref_remember_pivots(matrix, pivot_indeces);
 	return pivot_indeces.size();
@@ -964,8 +1017,10 @@ int rank(Matrix matrix)
 //}
 
 //{ Determinant 
-number determinant(Matrix matrix)
+number determinant(const Matrix& m)
 {
+	Matrix matrix = m;
+
 	if(matrix.rows() != matrix.cols())
 		throw std::invalid_argument("determinant(): this matrix is not square: determinant not defined");
 
@@ -1012,7 +1067,7 @@ number determinant(Matrix matrix)
 //{ Eigenvalues UNFINISHED
 
 
-number power_method(Matrix matrix, int iterations) 
+number power_method(const Matrix& matrix, int iterations) 
 {
 	std::vector<number> current(matrix.cols(),1);
 	current = current / length(current);
@@ -1030,8 +1085,9 @@ number power_method(Matrix matrix, int iterations)
 
 
 
-std::vector<number> eigenvalues(Matrix matrix) // utilises the QR algorithm to compute the eigenvalues
+std::vector<number> eigenvalues(const Matrix& m) // utilises the QR algorithm to compute the eigenvalues
 {
+	Matrix matrix = m;
 	transform_into_upper_hessenberg(matrix);
 		
 		
@@ -1043,3 +1099,5 @@ std::vector<number> eigenvalues(Matrix matrix) // utilises the QR algorithm to c
 
 
 //}
+
+}
