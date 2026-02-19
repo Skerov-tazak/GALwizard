@@ -1,5 +1,5 @@
 # GALwizard 
-[![Test](https://github.com/Skerov-tazak/GALwizard/actions/workflows/test.yml/badge.svg)](https://github.com/Skerov-tazak/GALwizard/actions/workflows/test.yml)
+[![Test](https://github.com/Skerov-tazak/GALwizard/actions/workflows/test.yaml/badge.svg)](https://github.com/Skerov-tazak/GALwizard/actions/workflows/test.yaml)
 
 **GALwizard** is a numerical linear algebra and complex math library written from scratch in C++. 
 
