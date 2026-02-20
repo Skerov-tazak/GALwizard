@@ -778,6 +778,9 @@ TEST_CASE("solve_system tests", "[Matrix][solve_system]") {
 		std::vector<number> b = { number(11), number(13) };
 
 		auto result = solve_system(A, b);
+		auto res2 = solve_with_PLU(A, b);
+
+		REQUIRE(result == res2);
 
 		REQUIRE(result.size() == 2);
 

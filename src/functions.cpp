@@ -991,6 +991,36 @@ std::vector<Matrix> solve_system(const Matrix& lhs, const std::vector<number>& R
 	
 }
 
+std::vector<number> solve_with_PLU(Matrix LHS, std::vector<number> RHS)
+{
+	// PLU -> A = PLU. Thus PLUx = b. First find Ly = inv(P)B and then Ux = y. inv(P) easy - just transpose 
+	std::vector<Matrix> PLU = PLU_decompose(LHS);
+	std::vector<number> b = multiply(transpose(PLU[0]), RHS);
+	std::vector<number> y(n, {0,0});
+	std::vector<number> solution(n, {0,0});
+
+	for(int i = 0; i < PLU[1].rows(); i++)
+	{
+		number sum = 0;
+		for(int j = 0; j < i; j++)
+			sum += PLU[1].at(i,j) * y.at(j);
+		
+		y[i] = (b[i] - sum)/PLU[1].at(i,i);
+	}
+
+	y = multiply(PLU[1], y);
+
+	for(int i = PLU[2].rows() - 1; i >= 0; i--)
+	{
+		number sum = 0;
+		for(int j = PLU[2].rows() - 1; j > i; j--)
+			sum += PLU[1].at(i,j) * solution.at(j);
+		
+		solution[i] = (y[i] - sum)/PLU[1].at(i,i);
+	}
+	
+	return multiply(PLU[0], solution);
+}
 //}
 
 //{ Best solution
